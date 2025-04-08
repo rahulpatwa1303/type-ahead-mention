@@ -1,130 +1,191 @@
-# Type-Ahead Mention
+# 📦 type-ahead-mention
 
-## Purpose
-
-Efficiently integrating **mention-based suggestions** into applications can be challenging, especially in **low-code** and **custom tool-building** environments like **Tooljet** and **Appsmith**. Developers often spend time creating **repetitive logic** for recognizing keywords, fetching relevant suggestions, and handling user selections.
-
-**Type-Ahead Mention** provides a **flexible, high-performance solution** that dynamically suggests relevant items based on user input, significantly reducing development time and enhancing the user experience.
+A lightweight and extensible React package that enables smart mention-based suggestions (`@`, `$`, or custom triggers) in text inputs or textareas — complete with custom styles, hooks, and keyboard navigation support.
 
 ---
 
-## Benefits
+## ✨ Features
 
-✅ **Flexible & Customizable** – Supports multiple data sources and dynamic suggestions based on user input.
-✅ **Improves Efficiency** – Saves development time by eliminating the need to build mention logic from scratch.
-✅ **Enhanced User Experience** – Helps users navigate and insert mentions seamlessly with real-time suggestions.
-✅ **Optimized Performance** – Uses efficient state management and lookups for smooth interaction.
-✅ **Keyboard Navigation Support** – Users can navigate suggestions using arrow keys and quickly insert selections.
+- 🔥 Simple `<Mentions />` component with rich interaction
+- 🧐 Custom `useMentions()` hook for advanced use cases
+- 🔭 Keyboard navigation (arrow keys, enter to select)
+- 💅 Style with your own theme via CSS modules
+- ⚙️ Supports nested suggestion paths (`object.key.subkey`)
+- ⚙️ Works with `textarea` or `input` elements
 
 ---
 
-## Installation
+## 📦 Installation
 
-To install Type-Ahead Mention, use npm:
-
-```sh
-npm install @your-package/type-ahead-mention
-```
-
-Or using yarn:
-
-```sh
-yarn add @your-package/type-ahead-mention
+```bash
+npm install type-ahead-mention
+# or
+yarn add type-ahead-mention
 ```
 
 ---
 
-## Usage
+## 🥪 Quick Start
 
-### Basic Example
-
-Here's how you can integrate **Type-Ahead Mention** into your React application:
+### 1. Import the Component
 
 ```tsx
-import { useMentions } from "@your-package/type-ahead-mention";
-
-const MyComponent = () => {
-  const {
-    query,
-    setQuery,
-    suggestions,
-    highlightedIndex,
-    handleChange,
-    handleKeyDown,
-    insertSuggestion,
-    inputRef,
-  } = useMentions({
-    triggerString: "@",
-    suggestionsData: {
-      users: { name: "John Doe", email: "john@example.com" },
-      projects: { title: "New App", id: "12345" },
-    },
-  });
-
-  return (
-    <div>
-      <input
-        ref={inputRef}
-        type="text"
-        value={query}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-      />
-      {suggestions.length > 0 && (
-        <ul>
-          {suggestions.map((suggestion, index) => (
-            <li key={index} onClick={() => insertSuggestion(suggestion)}>
-              {suggestion}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
+import { Mentions } from "type-ahead-mention";
 ```
 
----
-
-## Advanced Use Case
-
-For integration with a **rich text editor** or **custom input fields**, simply use the `useMentions` hook within your component and manage interactions accordingly.
+### 2. Use in Your App
 
 ```tsx
-const RichTextEditor = () => {
-  const { query, handleChange, handleKeyDown, inputRef } = useMentions({
-    triggerString: "$",
-    suggestionsData: {
-      variables: { user: "John Doe", order: "#1234" },
+<Mentions
+  triggerString="@"
+  suggestionsData={{
+    user: {
+      name: "John",
+      email: "john@example.com",
     },
-  });
-
-  return (
-    <textarea
-      ref={inputRef}
-      value={query}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-    />
-  );
-};
+    admin: {
+      role: "Moderator",
+    },
+  }}
+/>
 ```
 
 ---
 
-## Contributing
+## 🧪 Custom Hook Usage: `useMentions`
 
-If you encounter issues or have ideas for improvement, feel free to **open an issue** or contribute via **pull requests**. Let's build better developer tools together! 🚀
+If you need full control over the logic (e.g., using a custom UI), use the `useMentions` hook:
+
+### 1. Import the Hook
+
+```tsx
+import { useMentions, useCaretPosition } from "type-ahead-mention";
+import styles from "type-ahead-mention/style"; // <-- Import default styles
+```
+
+### 2. Example Usage
+
+```tsx
+const {
+  query,
+  setQuery,
+  suggestions,
+  highlightedIndex,
+  handleChange,
+  handleKeyDown,
+  insertSuggestion,
+  inputRef,
+  scrollToHighlightedIndex
+} = useMentions({
+  triggerString: "@",
+  suggestionsData: {
+    user: {
+      name: "Alice",
+      email: "alice@example.com",
+    },
+    team: {
+      leader: "Bob",
+    }
+  }
+});
+```
+
+### 3. Full JSX Example
+
+```tsx
+<textarea
+  ref={inputRef}
+  value={query}
+  onChange={handleChange}
+  onKeyDown={handleKeyDown}
+/>
+
+{suggestions.length > 0 && (
+  <ul className="suggestions-container">
+    {suggestions.map((sug, index) => (
+      <li
+        key={sug}
+        className={
+          index === highlightedIndex
+            ? `${styles.suggestionItem} ${styles.suggestionItemActive}`
+            : styles.suggestionItem
+        }
+        onMouseDown={() => insertSuggestion(sug)}
+      >
+        {sug}
+      </li>
+    ))}
+  </ul>
+)}
+```
 
 ---
 
-## License
+## 🎯 API Reference
 
-This project is open-source under the **MIT License**.
+### `useMentions({ triggerString, suggestionsData })`
+
+| Param             | Type                      | Description                                   |
+|------------------|---------------------------|-----------------------------------------------|
+| `triggerString`  | `string`                  | Character to trigger suggestions (e.g. `@`)  |
+| `suggestionsData`| `Record<string, any>`     | Data object used for suggestions              |
+
+**Returns:**
+
+- `query`: Current input value
+- `setQuery()`: Setter for input value
+- `suggestions`: Array of matched suggestion keys
+- `highlightedIndex`: Currently highlighted index
+- `handleChange(e)`: Input change handler
+- `handleKeyDown(e)`: Keyboard handler
+- `insertSuggestion(suggestion)`: Inserts selected suggestion into input
+- `inputRef`: Ref to the input/textarea
+- `scrollToHighlightedIndex(index)`: Scrolls to active suggestion
 
 ---
 
-## Contact
+## 🤠 Advanced: `useCaretPosition`
 
-For inquiries, feedback, or collaboration opportunities, reach out via [your contact info].
+A utility hook to get the caret (cursor) position in the input field — great for rendering floating suggestion boxes near the cursor.
+
+```tsx
+const caret = useCaretPosition(inputRef, cursorPosition);
+console.log(caret.x, caret.y);
+```
+
+---
+
+## 🎨 Styling
+
+### Using CSS Modules
+
+This package includes default styles via CSS Modules. Import them into your component like so:
+
+```tsx
+import styles from 'type-ahead-mention/style';
+```
+
+You’ll get the following classes:
+
+- `suggestionItem`
+- `suggestionItemActive`
+
+You can override or extend them in your own styles.
+
+---
+
+## 💠 Build / Contribute
+
+```bash
+git clone https://github.com/your-username/type-ahead-mention
+cd type-ahead-mention
+npm install
+npm run dev
+```
+
+---
+
+## 📄 License
+
+MIT © 2025 – Crafted with ❤️ for React developers.
 

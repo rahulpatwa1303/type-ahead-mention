@@ -1,53 +1,39 @@
 {
-  "name": "type-ahead-mention", 
-  "version": "1.0.0", 
-  "description": "A flexible type-ahead mention library for dynamic suggestions.",
-  "main": "./dist/index.js", 
-  "module": "./dist/index.js",
+  "name": "type-ahead-mention",
+  "version": "1.0.0",
+  "main": "./dist/type-ahead-mention.umd.js",
+  "module": "./dist/type-ahead-mention.es.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "index.ts"
-  ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
+      "import": "./dist/type-ahead-mention.es.js",
+      "require": "./dist/type-ahead-mention.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./style": "./src/SuggestionBox.module.css"
+  },
+  "files": [
+    "dist",
+    "src/SuggestionBox.module.css"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -p tsconfig.json && vite build",
-    "lint": "eslint .",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "rm -rf ./dist && npm run build",
+    "build": "vite build"
   },
-  "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "dependencies": {},
   "devDependencies": {
-    "@babel/preset-typescript": "^7.26.0",
-    "@testing-library/react": "^16.2.0",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "^9.17.0",
-    "vite": "^6.0.5"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/your-username/type-ahead-mention.git"
-  },
-  "keywords": [
-    "react",
-    "mention",
-    "type-ahead",
-    "autocomplete",
-    "dynamic suggestions"
-  ],
-  "author": "Your Name",
-  "license": "MIT"
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vite-plugin-css-injected-by-js": "^3.5.2",
+    "vite-plugin-dts": "^3.0.0"
+  }
 }

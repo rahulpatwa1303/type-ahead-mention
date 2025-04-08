@@ -144,7 +144,7 @@ export const useCaretPosition = (textareaRef: React.RefObject<HTMLTextAreaElemen
  */
 const getCaretCoordinates = (textarea: HTMLTextAreaElement, position: number) => {
   const div = document.createElement("div");
-  const style = window.getComputedStyle(textarea);
+  const style = window.getComputedStyle(textarea) as any;
 
   for (const prop of style) {
     div.style.setProperty(prop, style.getPropertyValue(prop));

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import Mentions from "./mentions";
+import Mentions from "./Mentions";
 import {
   useCaretPosition,
   // useScrollToHighlight,
@@ -41,7 +41,7 @@ function App() {
     handleInputChange(e);
   };
 
-  const coord = useCaretPosition(inputRef, cursorPosition);
+  const coord = useCaretPosition(inputRef as any, cursorPosition);
   // const scrollToHighlightedIndex = useScrollToHighlight(suggestionContainerRef);
 
   return (
@@ -65,8 +65,7 @@ function App() {
       />
       <div style={{ position: "relative" }}>
         <textarea
-          ref={inputRef}
-          type="text"
+          ref={inputRef as React.RefObject<HTMLTextAreaElement>}
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
@@ -75,7 +74,7 @@ function App() {
         {suggestions.length > 0 && (
           <ul
             className="suggestion-container"
-            ref={scrollToHighlightedIndex}
+            ref={scrollToHighlightedIndex as any}
             autoFocus={true}
             style={{
               top: `${coord.y}px`,
