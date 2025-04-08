@@ -172,20 +172,4 @@ You’ll get the following classes:
 
 You can override or extend them in your own styles.
 
----
-
-## 💠 Build / Contribute
-
-```bash
-git clone https://github.com/your-username/type-ahead-mention
-cd type-ahead-mention
-npm install
-npm run dev
-```
-
----
-
-## 📄 License
-
-MIT © 2025 – Crafted with ❤️ for React developers.
 
