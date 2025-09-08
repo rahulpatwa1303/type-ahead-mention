@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./SuggestionBox.module.css";
 
+type ValidationResult = {
+  isValid: boolean;
+  message?: string;
+};
+
 type FormData = {
   query: string;
 };
@@ -9,11 +14,17 @@ function Mentions({
   suggestionsData,
   triggerString = "${",
   as = "textarea",
+  onInputChange,
+  validator,
+  showValidationFeedback = true,
   ...props
 }: {
   suggestionsData: Record<string, any> | string[];
   triggerString: string;
   as?: "textarea" | "input";
+  onInputChange?: (value: string) => void;
+  validator?: (value: string) => ValidationResult;
+  showValidationFeedback?: boolean;
 } & React.TextareaHTMLAttributes<HTMLTextAreaElement> &
   React.InputHTMLAttributes<HTMLInputElement>) {
   const [formData, setFormData] = useState<FormData>({
@@ -23,6 +34,7 @@ function Mentions({
   const [cursorPosition, setCursorPosition] = useState<number>(0);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [coord, setCoord] = useState<{ x: number; y: number } | null>(null);
+  const [validationResult, setValidationResult] = useState<ValidationResult>({ isValid: true });
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const getSuggestionKeys = useCallback((refState: any, input: string) => {
@@ -52,6 +64,17 @@ function Mentions({
     const newQuery = e.target.value;
 
     setFormData({ query: newQuery });
+
+    // Call onInputChange callback for real-time evaluation
+    if (onInputChange) {
+      onInputChange(newQuery);
+    }
+
+    // Run validation if validator is provided
+    if (validator) {
+      const result = validator(newQuery);
+      setValidationResult(result);
+    }
 
     if (textareaRef.current) {
       setCursorPosition(textareaRef.current.selectionStart);
@@ -232,8 +255,15 @@ function Mentions({
             setSuggestions([]);
           }
         }}
-        className={styles.inputField}
+        className={`${styles.inputField} ${!validationResult.isValid ? styles.invalid : ''}`}
       />
+
+      {/* Validation Feedback */}
+      {showValidationFeedback && !validationResult.isValid && validationResult.message && (
+        <div className={styles.validationFeedback}>
+          {validationResult.message}
+        </div>
+      )}
 
       {suggestions.length > 0 && coord && (
         <div
