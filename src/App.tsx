@@ -16,6 +16,8 @@ function App() {
     console.log(e.target.value);
   };
 
+  const resolvedQuery = replaceMentions(query, "@", suggestionsData);
+  
   const {
     query,
     handleChange: handleInputChange,
