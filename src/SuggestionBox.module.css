@@ -13,6 +13,17 @@
   padding: 8px;
 }
 
+.inputField.invalid {
+  border-color: #ef4444; /* border-red-500 */
+}
+
+.validationFeedback {
+  color: #ef4444; /* text-red-500 */
+  font-size: 0.75rem; /* text-xs */
+  margin-top: 4px;
+  padding: 2px 4px;
+}
+
 .suggestionBox {
   position: absolute;
   background-color: white;

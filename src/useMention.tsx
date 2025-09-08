@@ -1,15 +1,23 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
+export interface ValidationResult {
+  isValid: boolean;
+  message?: string;
+}
+
 interface UseSuggestionsProps {
   triggerString: string;
   suggestionsData: Record<string, any>;
+  onInputChange?: (value: string) => void;
+  validator?: (value: string) => ValidationResult;
 }
 
-export const useMentions = ({ triggerString, suggestionsData }: UseSuggestionsProps) => {
+export const useMentions = ({ triggerString, suggestionsData, onInputChange, validator }: UseSuggestionsProps) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [validationResult, setValidationResult] = useState<ValidationResult>({ isValid: true });
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
 
   /**
@@ -41,6 +49,17 @@ export const useMentions = ({ triggerString, suggestionsData }: UseSuggestionsPr
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
     setQuery(value);
+
+    // Call onInputChange callback for real-time evaluation
+    if (onInputChange) {
+      onInputChange(value);
+    }
+
+    // Run validation if validator is provided
+    if (validator) {
+      const result = validator(value);
+      setValidationResult(result);
+    }
 
     if (inputRef.current) setCursorPosition(inputRef.current.selectionStart || 0);
 
@@ -120,7 +139,7 @@ export const useMentions = ({ triggerString, suggestionsData }: UseSuggestionsPr
     }
   };
 
-  return { query, setQuery, suggestions, highlightedIndex, handleChange, handleKeyDown, insertSuggestion, inputRef,scrollToHighlightedIndex };
+  return { query, setQuery, suggestions, highlightedIndex, handleChange, handleKeyDown, insertSuggestion, inputRef, scrollToHighlightedIndex, validationResult };
 };
 
 /**
