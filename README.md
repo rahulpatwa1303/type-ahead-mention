@@ -1,6 +1,6 @@
 # 📦 type-ahead-mention
 
-A lightweight and extensible React package that enables smart mention-based suggestions (`@`, `$`, or custom triggers) in text inputs or textareas — complete with custom styles, hooks, and keyboard navigation support.
+A lightweight and extensible React package that enables smart mention-based suggestions (`@`, `$`, or custom triggers) in text inputs or textareas — complete with custom styles, hooks, keyboard navigation support, and **value evaluation**.
 
 ---
 
@@ -12,6 +12,54 @@ A lightweight and extensible React package that enables smart mention-based sugg
 - 💅 Style with your own theme via CSS modules
 - ⚙️ Supports nested suggestion paths (`object.key.subkey`)
 - ⚙️ Works with `textarea` or `input` elements
+- **🎯 NEW: Value evaluation - Press `Tab` to replace mentions with actual values!**
+
+---
+
+## 🚀 Live Demo
+
+**[View Interactive Demo →](https://rahulpatwa1303.github.io/type-ahead-mention/)**
+
+Try the evaluation feature:
+1. Type `@users.name` 
+2. Press `Tab`
+3. Watch it transform to "Alice"!
+
+---
+
+## 🎯 Value Evaluation Feature
+
+The new evaluation feature allows you to replace mention paths with their actual values from your data structure.
+
+### How it works:
+
+1. **Type a mention path**: `@users.name`
+2. **Press Tab**: The mention gets replaced with the actual value
+3. **Result**: `@users.name` becomes `"Alice"`
+
+### Example:
+
+```tsx
+const data = {
+  users: { name: "Alice", email: "alice@example.com" },
+  orders: { id: 123, status: "shipped" }
+};
+
+// In your text field:
+// Type: @users.name
+// Press: Tab
+// Result: "Alice"
+
+// Type: @orders.id  
+// Press: Tab
+// Result: "123"
+```
+
+### Supported Data Types:
+- ✅ Strings
+- ✅ Numbers  
+- ✅ Nested objects
+- ❌ Arrays and complex objects (returns original path)
 
 ---
 
@@ -137,10 +185,17 @@ const {
 - `suggestions`: Array of matched suggestion keys
 - `highlightedIndex`: Currently highlighted index
 - `handleChange(e)`: Input change handler
-- `handleKeyDown(e)`: Keyboard handler
+- `handleKeyDown(e)`: Keyboard handler (includes Tab for evaluation)
 - `insertSuggestion(suggestion)`: Inserts selected suggestion into input
+- `evaluateQuery()`: Evaluates all mentions in current query and replaces with values
 - `inputRef`: Ref to the input/textarea
 - `scrollToHighlightedIndex(index)`: Scrolls to active suggestion
+
+**Keyboard Shortcuts:**
+- `Arrow Keys`: Navigate suggestions
+- `Enter`: Select highlighted suggestion  
+- `Tab`: **Evaluate mentions to actual values**
+- `Escape`: Close suggestions
 
 ---
 

@@ -25,8 +25,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "prepublishOnly": "rm -rf ./dist && npm run build",
     "build": "vite build",
+    "build-demo": "vite build --mode demo",
+    "prepublishOnly": "rm -rf ./dist && npm run build",
     "preview": "vite preview"
   },
   "devDependencies": {
