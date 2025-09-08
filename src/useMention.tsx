@@ -166,3 +166,32 @@ const getCaretCoordinates = (textarea: HTMLTextAreaElement, position: number) =>
 
   return { x: offsetLeft, y: offsetTop + 10 };
 };
+
+function resolvePath(obj: any, path: string): any {
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
+}
+
+function extractMentions(input: string, triggerString: string): string[] {
+  const regex = new RegExp(`\\${triggerString}([\\w.]+)`, "g"); // e.g. @user.name
+  const matches: string[] = [];
+  let match;
+
+  while ((match = regex.exec(input)) !== null) {
+    matches.push(match[1]); // just "user.name"
+  }
+  return matches;
+}
+
+export function replaceMentions(
+  input: string,
+  triggerString: string,
+  data: Record<string, any>
+): string {
+  return input.replace(
+    new RegExp(`\\${triggerString}([\\w.]+)`, "g"),
+    (_, path) => {
+      const value = resolvePath(data, path);
+      return value !== undefined ? String(value) : `${triggerString}${path}`;
+    }
+  );
+}
