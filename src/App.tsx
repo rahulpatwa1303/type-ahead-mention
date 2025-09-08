@@ -25,6 +25,7 @@ function App() {
     insertSuggestion,
     inputRef,
     scrollToHighlightedIndex,
+    evaluateQuery,
   } = useMentions({
     triggerString: "@",
     suggestionsData: {

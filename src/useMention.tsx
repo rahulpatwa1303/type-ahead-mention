@@ -55,6 +55,12 @@ export const useMentions = ({ triggerString, suggestionsData }: UseSuggestionsPr
    * Handles keyboard navigation for suggestions.
    */
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      evaluateQuery();
+      return;
+    }
+
     if (!suggestions.length) return;
 
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -72,6 +78,51 @@ export const useMentions = ({ triggerString, suggestionsData }: UseSuggestionsPr
       insertSuggestion(suggestions[highlightedIndex]);
     }
   };
+
+  /**
+   * Evaluates a path in the suggestions data and returns the actual value.
+   */
+  const evaluatePath = useCallback((path: string) => {
+    if (!suggestionsData || !path) return path;
+
+    const keys = path.split(".");
+    let currentValue: any = suggestionsData;
+
+    for (const key of keys) {
+      if (currentValue && typeof currentValue === "object" && key in currentValue) {
+        currentValue = currentValue[key];
+      } else {
+        return path; // Return original path if evaluation fails
+      }
+    }
+
+    // Convert the final value to string if it's not already
+    return typeof currentValue === "string" || typeof currentValue === "number" 
+      ? String(currentValue) 
+      : path; // Return original path if value is not primitive
+  }, [suggestionsData]);
+
+  /**
+   * Evaluates all mentions in the current query and replaces them with actual values.
+   */
+  const evaluateQuery = useCallback(() => {
+    if (!inputRef.current) return;
+
+    const escapedTrigger = triggerString.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const mentionRegex = new RegExp(`${escapedTrigger}([^\\s]+)`, "g");
+    
+    const evaluatedQuery = query.replace(mentionRegex, (match, path) => {
+      const evaluatedValue = evaluatePath(path);
+      return evaluatedValue;
+    });
+
+    setQuery(evaluatedQuery);
+    
+    // Update cursor position to end of text
+    const newCursorPosition = evaluatedQuery.length;
+    setCursorPosition(newCursorPosition);
+    setTimeout(() => inputRef.current?.setSelectionRange(newCursorPosition, newCursorPosition), 0);
+  }, [query, triggerString, evaluatePath]);
 
   /**
    * Inserts the selected suggestion into the input field.
@@ -120,7 +171,7 @@ export const useMentions = ({ triggerString, suggestionsData }: UseSuggestionsPr
     }
   };
 
-  return { query, setQuery, suggestions, highlightedIndex, handleChange, handleKeyDown, insertSuggestion, inputRef,scrollToHighlightedIndex };
+  return { query, setQuery, suggestions, highlightedIndex, handleChange, handleKeyDown, insertSuggestion, inputRef, scrollToHighlightedIndex, evaluateQuery };
 };
 
 /**
