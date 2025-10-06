@@ -46,6 +46,45 @@ function Mentions({
     return Object.keys(currentState).filter((key) => key.startsWith(lastKey));
   }, []);
 
+  const evaluatePath = useCallback((path: string) => {
+    if (!suggestionsData || !path) return path;
+
+    const keys = path.split(".");
+    let currentValue: any = suggestionsData;
+
+    for (const key of keys) {
+      if (currentValue && typeof currentValue === "object" && key in currentValue) {
+        currentValue = currentValue[key];
+      } else {
+        return path; // Return original path if evaluation fails
+      }
+    }
+
+    // Convert the final value to string if it's not already
+    return typeof currentValue === "string" || typeof currentValue === "number" 
+      ? String(currentValue) 
+      : path; // Return original path if value is not primitive
+  }, [suggestionsData]);
+
+  const evaluateQuery = useCallback(() => {
+    if (!textareaRef.current) return;
+
+    const escapedTrigger = triggerString.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const mentionRegex = new RegExp(`${escapedTrigger}([^\\s]+)`, "g");
+    
+    const evaluatedQuery = formData.query.replace(mentionRegex, (match, path) => {
+      const evaluatedValue = evaluatePath(path);
+      return evaluatedValue;
+    });
+
+    setFormData({ query: evaluatedQuery });
+    
+    // Update cursor position to end of text
+    const newCursorPosition = evaluatedQuery.length;
+    setCursorPosition(newCursorPosition);
+    setTimeout(() => textareaRef.current?.setSelectionRange(newCursorPosition, newCursorPosition), 0);
+  }, [formData.query, triggerString, evaluatePath]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
   ) => {
@@ -78,6 +117,12 @@ function Mentions({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      evaluateQuery();
+      return;
+    }
+
     if (suggestions.length === 0) return;
 
     if (e.key === "ArrowDown") {
