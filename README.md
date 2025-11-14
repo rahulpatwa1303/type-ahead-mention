@@ -1,191 +1,228 @@
-# 📦 type-ahead-mention
+# SmartInput
 
-A lightweight and extensible React package that enables smart mention-based suggestions (`@`, `$`, or custom triggers) in text inputs or textareas — complete with custom styles, hooks, and keyboard navigation support.
+A powerful CodeMirror-based template editor with intelligent autocomplete for React applications.
 
----
+## Features
 
-## ✨ Features
+- 🎯 **Smart Autocomplete** - CodeMirror-powered autocomplete with nested object navigation
+- 🎨 **Customizable** - Themes, triggers, single/multi-line modes
+- ⚡ **High Performance** - Built on CodeMirror 6
+- 🪝 **Hook-based API** - Use `useMentions` hook for custom implementations
+- 📦 **TypeScript Ready** - Full TypeScript support
+- 🔌 **Easy Integration** - Drop-in component or composable hook
 
-- 🔥 Simple `<Mentions />` component with rich interaction
-- 🧐 Custom `useMentions()` hook for advanced use cases
-- 🔭 Keyboard navigation (arrow keys, enter to select)
-- 💅 Style with your own theme via CSS modules
-- ⚙️ Supports nested suggestion paths (`object.key.subkey`)
-- ⚙️ Works with `textarea` or `input` elements
-
----
-
-## 📦 Installation
+## Installation
 
 ```bash
 npm install type-ahead-mention
-# or
-yarn add type-ahead-mention
 ```
 
----
+## Quick Start
 
-## 🥪 Quick Start
-
-### 1. Import the Component
+### Component Usage
 
 ```tsx
-import { Mentions } from "type-ahead-mention";
+import { SmartInput } from 'type-ahead-mention';
+import { useState } from 'react';
+
+function MyComponent() {
+  const [value, setValue] = useState('Hello {{user.name}}!');
+  
+  const data = {
+    user: { name: "Alice", email: "alice@example.com" },
+    order: { id: 123, total: 299.99 }
+  };
+  
+  return (
+    <SmartInput
+      value={value}
+      onChange={setValue}
+      suggestions={data}
+      config={{
+        trigger: { trigger: '{{', closingTrigger: '}}' },
+        singleLine: true,
+        editorTheme: 'dark'
+      }}
+    />
+  );
+}
 ```
 
-### 2. Use in Your App
+### Hook Usage
 
 ```tsx
-<Mentions
-  triggerString="@"
-  suggestionsData={{
-    user: {
-      name: "John",
-      email: "john@example.com",
+import { useMentions } from 'type-ahead-mention';
+
+function CustomInput() {
+  const {
+    value,
+    setValue,
+    handleChange,
+    handleKeyDown,
+    suggestions,
+    highlightedIndex,
+    inputRef,
+  } = useMentions({
+    suggestionsData: {
+      user: { name: "Alice", email: "alice@example.com" },
+      product: { id: 123, price: 99.99 }
     },
-    admin: {
-      role: "Moderator",
-    },
+    config: {
+      trigger: { trigger: '@' }
+    }
+  });
+  
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+      />
+      {/* Build your custom suggestion UI */}
+    </div>
+  );
+}
+```
+
+## Configuration
+
+### SmartInput Config
+
+```typescript
+interface SmartInputConfig {
+  trigger: {
+    trigger: string;              // e.g., '{{', '@', '$'
+    closingTrigger?: string;      // e.g., '}}'
+  };
+  editorTheme?: 'light' | 'dark'; // CodeMirror theme
+  showLineNumbers?: boolean;       // Show line numbers
+  singleLine?: boolean;            // Single-line mode
+  height?: string;                 // Editor height
+  width?: string;                  // Editor width
+  allowMultiple?: boolean;         // Allow multiple mentions
+  caseSensitive?: boolean;         // Case-sensitive matching
+}
+```
+
+## API
+
+### SmartInput Component
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `value` | `string` | ✅ | Current editor value |
+| `onChange` | `(value: string) => void` | ✅ | Change handler |
+| `suggestions` | `SuggestionNode` | ✅ | Nested suggestion data |
+| `config` | `Partial<SmartInputConfig>` | ❌ | Configuration options |
+| `style` | `React.CSSProperties` | ❌ | Custom styles |
+| `className` | `string` | ❌ | Custom class name |
+
+### useMentions Hook
+
+**Parameters:**
+- `suggestionsData: SuggestionNode` - Nested object with suggestion data
+- `config?: Partial<SmartInputConfig>` - Configuration options
+
+**Returns:**
+```typescript
+{
+  value: string;
+  setValue: (value: string) => void;
+  suggestions: string[];
+  highlightedIndex: number;
+  handleChange: (e: ChangeEvent) => void;
+  handleKeyDown: (e: KeyboardEvent) => void;
+  insertSuggestion: (suggestion: string) => void;
+  inputRef: RefObject;
+  reset: () => void;
+}
+```
+
+## Utilities
+
+### evaluateTemplateString
+
+Evaluate template strings with nested data:
+
+```typescript
+import { evaluateTemplateString } from 'type-ahead-mention';
+
+const template = 'Hello {{user.name}}, your order {{order.id}} is ready!';
+const data = {
+  user: { name: 'Alice' },
+  order: { id: 123 }
+};
+
+const result = evaluateTemplateString(template, data);
+// "Hello Alice, your order 123 is ready!"
+```
+
+## Examples
+
+### Multi-line Editor
+
+```tsx
+<SmartInput
+  value={template}
+  onChange={setTemplate}
+  suggestions={data}
+  config={{
+    trigger: { trigger: '{{', closingTrigger: '}}' },
+    editorTheme: 'dark',
+    showLineNumbers: true,
+    singleLine: false,
+    height: '200px',
   }}
 />
 ```
 
----
-
-## 🧪 Custom Hook Usage: `useMentions`
-
-If you need full control over the logic (e.g., using a custom UI), use the `useMentions` hook:
-
-### 1. Import the Hook
+### Single-line Input
 
 ```tsx
-import { useMentions, useCaretPosition } from "type-ahead-mention";
-import styles from "type-ahead-mention/style"; // <-- Import default styles
-```
-
-### 2. Example Usage
-
-```tsx
-const {
-  query,
-  setQuery,
-  suggestions,
-  highlightedIndex,
-  handleChange,
-  handleKeyDown,
-  insertSuggestion,
-  inputRef,
-  scrollToHighlightedIndex
-} = useMentions({
-  triggerString: "@",
-  suggestionsData: {
-    user: {
-      name: "Alice",
-      email: "alice@example.com",
-    },
-    team: {
-      leader: "Bob",
-    }
-  }
-});
-```
-
-### 3. Full JSX Example
-
-```tsx
-<textarea
-  ref={inputRef}
-  value={query}
-  onChange={handleChange}
-  onKeyDown={handleKeyDown}
+<SmartInput
+  value={input}
+  onChange={setInput}
+  suggestions={data}
+  config={{
+    trigger: { trigger: '{{', closingTrigger: '}}' },
+    singleLine: true,
+    editorTheme: 'light',
+  }}
 />
-
-{suggestions.length > 0 && (
-  <ul className="suggestions-container">
-    {suggestions.map((sug, index) => (
-      <li
-        key={sug}
-        className={
-          index === highlightedIndex
-            ? `${styles.suggestionItem} ${styles.suggestionItemActive}`
-            : styles.suggestionItem
-        }
-        onMouseDown={() => insertSuggestion(sug)}
-      >
-        {sug}
-      </li>
-    ))}
-  </ul>
-)}
 ```
 
----
-
-## 🎯 API Reference
-
-### `useMentions({ triggerString, suggestionsData })`
-
-| Param             | Type                      | Description                                   |
-|------------------|---------------------------|-----------------------------------------------|
-| `triggerString`  | `string`                  | Character to trigger suggestions (e.g. `@`)  |
-| `suggestionsData`| `Record<string, any>`     | Data object used for suggestions              |
-
-**Returns:**
-
-- `query`: Current input value
-- `setQuery()`: Setter for input value
-- `suggestions`: Array of matched suggestion keys
-- `highlightedIndex`: Currently highlighted index
-- `handleChange(e)`: Input change handler
-- `handleKeyDown(e)`: Keyboard handler
-- `insertSuggestion(suggestion)`: Inserts selected suggestion into input
-- `inputRef`: Ref to the input/textarea
-- `scrollToHighlightedIndex(index)`: Scrolls to active suggestion
-
----
-
-## 🤠 Advanced: `useCaretPosition`
-
-A utility hook to get the caret (cursor) position in the input field — great for rendering floating suggestion boxes near the cursor.
+### Custom Triggers
 
 ```tsx
-const caret = useCaretPosition(inputRef, cursorPosition);
-console.log(caret.x, caret.y);
+<SmartInput
+  value={value}
+  onChange={setValue}
+  suggestions={data}
+  config={{
+    trigger: { trigger: '[[', closingTrigger: ']]' }
+  }}
+/>
 ```
 
----
-
-## 🎨 Styling
-
-### Using CSS Modules
-
-This package includes default styles via CSS Modules. Import them into your component like so:
-
-```tsx
-import styles from 'type-ahead-mention/style';
-```
-
-You’ll get the following classes:
-
-- `suggestionItem`
-- `suggestionItemActive`
-
-You can override or extend them in your own styles.
-
----
-
-## 💠 Build / Contribute
+## Development
 
 ```bash
-git clone https://github.com/your-username/type-ahead-mention
-cd type-ahead-mention
+# Install dependencies
 npm install
+
+# Run dev server
 npm run dev
+
+# Build
+npm run build
 ```
 
----
+## License
 
-## 📄 License
+MIT
 
-MIT © 2025 – Crafted with ❤️ for React developers.
+## Contributing
 
+Contributions welcome! Please open an issue or PR.
