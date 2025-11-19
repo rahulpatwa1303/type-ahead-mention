@@ -7,7 +7,7 @@ export default defineConfig({
   base: '/type-ahead-mention/',
   resolve: {
     alias: {
-      '@type-ahead-mention/core': path.resolve(__dirname, '../packages/core/src'),
+      'type-ahead-mention': path.resolve(__dirname, '../packages/core/src'),
     },
   },
 });

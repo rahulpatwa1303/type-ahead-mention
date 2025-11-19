@@ -1,6 +1,6 @@
 {
-  "name": "@type-ahead-mention/core",
-  "version": "1.0.0",
+  "name": "type-ahead-mention",
+  "version": "2.0.0",
   "description": "A powerful React component for mention-based autocompletion with CodeMirror. Supports nested objects and arrays with dot notation.",
   "main": "./dist/type-ahead-mention.umd.js",
   "module": "./dist/type-ahead-mention.es.js",

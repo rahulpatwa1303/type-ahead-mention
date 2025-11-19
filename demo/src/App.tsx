@@ -1,5 +1,5 @@
 import { useState, CSSProperties } from "react";
-import { MentionInput, useMentionResolver, SuggestionNode } from "@type-ahead-mention/core";
+import { MentionInput, useMentionResolver, SuggestionNode } from "type-ahead-mention";
 import "./DemoLandingPage.css";
 
 const defaultSuggestionsData: SuggestionNode = {
