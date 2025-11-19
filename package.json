@@ -1,39 +1,16 @@
 {
-  "name": "type-ahead-mention",
+  "name": "type-ahead-mention-workspace",
   "version": "1.0.0",
-  "main": "./dist/type-ahead-mention.umd.js",
-  "module": "./dist/type-ahead-mention.es.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/type-ahead-mention.es.js",
-      "require": "./dist/type-ahead-mention.umd.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./style": "./src/SuggestionBox.module.css"
-  },
-  "files": [
-    "dist",
-    "src/SuggestionBox.module.css"
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "demo"
   ],
-  "sideEffects": [
-    "*.css"
-  ],
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
   "scripts": {
-    "prepublishOnly": "rm -rf ./dist && npm run build",
-    "build": "vite build"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5",
-    "vite-plugin-css-injected-by-js": "^3.5.2",
-    "vite-plugin-dts": "^3.0.0"
+    "dev:demo": "npm run dev --workspace=demo",
+    "build:lib": "npm run build --workspace=@type-ahead-mention/core",
+    "build:demo": "npm run build --workspace=demo",
+    "build": "npm run build:lib && npm run build:demo",
+    "publish:lib": "npm run build:lib && npm publish --workspace=@type-ahead-mention/core"
   }
 }
