@@ -1,7 +1,8 @@
 # Type-Ahead Mention
 
-[![npm version](https://img.shields.io/npm/v/@type-ahead-mention/core.svg)](https://www.npmjs.com/package/@type-ahead-mention/core)
+[![npm version](https://img.shields.io/npm/v/type-ahead-mention.svg)](https://www.npmjs.com/package/type-ahead-mention)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/type-ahead-mention)](https://bundlephobia.com/package/type-ahead-mention)
 
 A powerful, flexible React component for mention-based autocompletion powered by CodeMirror. Perfect for building chat apps, note-taking tools, template editors, and more with support for nested objects and arrays.
 
@@ -17,25 +18,31 @@ A powerful, flexible React component for mention-based autocompletion powered by
 - 🔧 **Template Resolution** - Built-in hook to resolve variables in your templates
 - 📦 **TypeScript Ready** - Complete type definitions included
 - 🎭 **Zero Config** - Works out of the box with sensible defaults
+- 🪶 **Lightweight** - Only 12KB gzipped with peer dependencies
 
 ## 📦 Installation
 
 ```bash
-npm install @type-ahead-mention/core
+npm install type-ahead-mention
 ```
 
-```bash
-yarn add @type-ahead-mention/core
-```
+**Peer Dependencies** (install these if not already in your project):
 
 ```bash
-pnpm add @type-ahead-mention/core
+npm install react react-dom @codemirror/autocomplete @codemirror/state @codemirror/view @popperjs/core @uiw/react-codemirror react-popper
+```
+
+Or with yarn:
+
+```bash
+yarn add type-ahead-mention
+yarn add react react-dom @codemirror/autocomplete @codemirror/state @codemirror/view @popperjs/core @uiw/react-codemirror react-popper
 ```
 
 ## 🚀 Quick Start
 
 ```tsx
-import { MentionInput } from '@type-ahead-mention/core';
+import { MentionInput } from 'type-ahead-mention';
 import { useState } from 'react';
 
 function App() {
