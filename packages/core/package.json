@@ -17,11 +17,22 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./codemirror": {
+      "import": {
+        "types": "./dist/codemirror.d.ts",
+        "default": "./dist/codemirror.js"
+      },
+      "require": {
+        "types": "./dist/codemirror.d.cts",
+        "default": "./dist/codemirror.cjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
   "files": [
     "dist",
+    "codemirror",
     "README.md",
     "LICENSE"
   ],
@@ -89,5 +100,8 @@
     "typecheck": "tsc --noEmit",
     "lint:package": "publint && attw --pack .",
     "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

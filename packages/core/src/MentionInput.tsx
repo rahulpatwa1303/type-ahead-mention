@@ -1,19 +1,15 @@
 // MentionInput.tsx
+// The public editor component. It renders the light TemplateTextarea at once,
+// loads CodeMirror in the background, then swaps to the full editor. Apps that
+// never render it never download CodeMirror.
 
-import React, {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-} from 'react';
-import { Annotation, Compartment, EditorState, Prec, type Extension } from '@codemirror/state';
-import { EditorView, keymap, placeholder as placeholderExt } from '@codemirror/view';
-import { history, historyKeymap, defaultKeymap } from '@codemirror/commands';
-import { acceptCompletion, completionStatus, startCompletion } from '@codemirror/autocomplete';
-import { singleLine, templateVariables, type MentionSource } from './codemirror';
-import { injectStyles } from './styles';
-import { DEFAULT_DELIMITERS, type Delimiters, type SuggestionNode } from './template';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import type { Extension } from '@codemirror/state';
+import type { EditorView } from '@codemirror/view';
+import type { MentionSource } from './mentions';
+import { TemplateTextarea } from './TemplateTextarea';
+import type { Delimiters, SuggestionNode } from './template';
+import type { EditorInputProps } from './editor/EditorInput';
 
 export interface MentionInputProps {
   /** The template text */
@@ -75,6 +71,11 @@ export interface MentionInputProps {
   className?: string;
   /** Extra CodeMirror extensions */
   extensions?: Extension[];
+  /**
+   * Minimum visible lines while the editor loads, in multiline mode.
+   * @default 1
+   */
+  rows?: number;
 }
 
 export interface MentionInputHandle {
@@ -84,234 +85,102 @@ export interface MentionInputHandle {
   insertVariable: (path: string) => void;
   /** Opens the suggestion list at the cursor */
   openSuggestions: () => void;
-  /** The underlying CodeMirror view, or null before mount */
+  /** Accepts the highlighted suggestion. Returns false when the list isn't open. */
+  acceptSuggestion: () => boolean;
+  /** Moves the highlight in the open list by `by` rows (negative moves up) */
+  moveSuggestion: (by: number) => void;
+  /** True while the suggestion list is open with results */
+  isSuggesting: () => boolean;
+  /** The underlying CodeMirror view, or null until the editor has loaded */
   view: EditorView | null;
 }
 
-const External = Annotation.define<boolean>();
 
-export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(
-  function MentionInput(
-    {
-      value,
-      onChange,
-      suggestions,
-      placeholder,
-      multiline = false,
-      delimiters = DEFAULT_DELIMITERS,
-      showValues = true,
-      highlight = true,
-      validate = true,
-      mentions,
-      colorScheme = 'light',
-      disabled = false,
-      readOnly = false,
-      autoFocus = false,
-      onSubmit,
-      onFocus,
-      onBlur,
-      id,
-      'aria-label': ariaLabel,
-      'aria-describedby': ariaDescribedBy,
-      style,
-      className,
-      extensions,
-    },
-    ref
-  ) {
-    const hostRef = useRef<HTMLDivElement>(null);
-    const viewRef = useRef<EditorView | null>(null);
-    const compartments = useRef({
-      config: new Compartment(),
-      mode: new Compartment(),
-      placeholder: new Compartment(),
-      editable: new Compartment(),
-      attrs: new Compartment(),
-      user: new Compartment(),
-    }).current;
+type EditorComponent = React.ForwardRefExoticComponent<
+  EditorInputProps & React.RefAttributes<MentionInputHandle>
+>;
 
-    // Latest callbacks, read from inside CodeMirror without reconfiguring it
-    const callbacks = useRef({ onChange, onSubmit, onFocus, onBlur });
-    callbacks.current = { onChange, onSubmit, onFocus, onBlur };
+let loaded: EditorComponent | null = null;
+let loading: Promise<EditorComponent> | null = null;
 
-    const mentionSources = !mentions ? [] : Array.isArray(mentions) ? mentions : [mentions];
-    const configExt = () =>
-      templateVariables({
-        data: suggestions,
-        delimiters,
-        showValues,
-        highlight,
-        validate,
-        mentions: mentionSources,
-      });
+/**
+ * Starts downloading the editor (CodeMirror) now, e.g. on hover or route change.
+ * MentionInput calls this itself on mount.
+ */
+export const preloadEditor = (): Promise<EditorComponent> =>
+  (loading ??= import('./editor/EditorInput').then((m) => (loaded = m.EditorInput)));
 
-    const submit = (view: EditorView) => {
-      if (!callbacks.current.onSubmit) return false;
-      callbacks.current.onSubmit(view.state.doc.toString());
-      return true;
+export const MentionInput = /* @__PURE__ */ forwardRef<MentionInputHandle, MentionInputProps>(function MentionInput(
+  props,
+  ref
+) {
+  const [Editor, setEditor] = useState<EditorComponent | null>(() => loaded);
+  const area = useRef<HTMLTextAreaElement>(null);
+  const editor = useRef<MentionInputHandle>(null);
+  const handoff = useRef<{ focused: boolean; selection: number } | null>(null);
+  const propsRef = useRef(props);
+  propsRef.current = props;
+
+  useEffect(() => {
+    if (Editor) return;
+    let live = true;
+    preloadEditor().then((component) => {
+      if (!live) return;
+      const el = area.current;
+      handoff.current = el
+        ? { focused: el.ownerDocument.activeElement === el, selection: el.selectionStart ?? 0 }
+        : null;
+      setEditor(() => component);
+    });
+    return () => {
+      live = false;
     };
+  }, [Editor]);
 
-    // Prec.high so these win over the default Enter binding.
-    // Suggestions still win over these, since autocompletion uses Prec.highest.
-    const modeExt = (): Extension =>
-      multiline
-        ? [EditorView.lineWrapping, Prec.high(keymap.of([{ key: 'Mod-Enter', run: submit }]))]
-        : [
-            singleLine(),
-            Prec.high(
-              keymap.of([
-                { key: 'Enter', run: (view) => submit(view) || true },
-                { key: 'Shift-Enter', run: () => true },
-              ])
-            ),
-          ];
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => (editor.current ? editor.current.focus() : area.current?.focus()),
+      blur: () => (editor.current ? editor.current.blur() : area.current?.blur()),
+      insertVariable: (path) => {
+        if (editor.current) return editor.current.insertVariable(path);
+        const el = area.current;
+        const { value, onChange, delimiters = { open: '{{', close: '}}' } } = propsRef.current;
+        const insert = `${delimiters.open}${path}${delimiters.close}`;
+        const from = el?.selectionStart ?? value.length;
+        const to = el?.selectionEnd ?? value.length;
+        onChange(value.slice(0, from) + insert + value.slice(to));
+      },
+      openSuggestions: () => (editor.current ? editor.current.openSuggestions() : area.current?.focus()),
+      acceptSuggestion: () => editor.current?.acceptSuggestion() ?? false,
+      moveSuggestion: (by) => editor.current?.moveSuggestion(by),
+      isSuggesting: () => editor.current?.isSuggesting() ?? false,
+      get view() {
+        return editor.current?.view ?? null;
+      },
+    }),
+    []
+  );
 
-    const editableExt = () => [
-      EditorView.editable.of(!disabled),
-      EditorState.readOnly.of(readOnly || disabled),
-    ];
-
-    const attrsExt = () =>
-      EditorView.contentAttributes.of({
-        ...(id ? { id } : {}),
-        ...(ariaLabel ? { 'aria-label': ariaLabel } : {}),
-        ...(ariaDescribedBy ? { 'aria-describedby': ariaDescribedBy } : {}),
-        'aria-multiline': String(multiline),
-      });
-
-    useLayoutEffect(() => {
-      injectStyles(hostRef.current!.ownerDocument);
-      const view = new EditorView({
-        parent: hostRef.current!,
-        state: EditorState.create({
-          doc: value,
-          extensions: [
-            history(),
-            Prec.high(keymap.of([{ key: 'Tab', run: acceptCompletion }])),
-            keymap.of([...defaultKeymap, ...historyKeymap]),
-            compartments.config.of(configExt()),
-            compartments.mode.of(modeExt()),
-            compartments.placeholder.of(placeholder ? placeholderExt(placeholder) : []),
-            compartments.editable.of(editableExt()),
-            compartments.attrs.of(attrsExt()),
-            compartments.user.of(extensions ?? []),
-            EditorView.updateListener.of((update) => {
-              if (
-                update.docChanged &&
-                !update.transactions.some((tr) => tr.annotation(External))
-              ) {
-                callbacks.current.onChange(update.state.doc.toString());
-              }
-              if (update.focusChanged) {
-                if (update.view.hasFocus) callbacks.current.onFocus?.();
-                else callbacks.current.onBlur?.();
-              }
-            }),
-          ],
-        }),
-      });
-      viewRef.current = view;
-      if (autoFocus) view.focus();
-      return () => {
-        view.destroy();
-        viewRef.current = null;
-      };
-      // Created once; props below are applied through compartments
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const reconfigure = (compartment: Compartment, ext: Extension) =>
-      viewRef.current?.dispatch({ effects: compartment.reconfigure(ext) });
-
-    const first = useRef(true);
-    useEffect(() => {
-      if (first.current) return;
-      reconfigure(compartments.config, configExt());
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [suggestions, delimiters.open, delimiters.close, showValues, highlight, validate, mentions]);
-
-    useEffect(() => {
-      if (first.current) return;
-      reconfigure(compartments.mode, modeExt());
-      reconfigure(compartments.attrs, attrsExt());
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [multiline, id, ariaLabel, ariaDescribedBy]);
-
-    useEffect(() => {
-      if (first.current) return;
-      reconfigure(compartments.placeholder, placeholder ? placeholderExt(placeholder) : []);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [placeholder]);
-
-    useEffect(() => {
-      if (first.current) return;
-      reconfigure(compartments.editable, editableExt());
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [disabled, readOnly]);
-
-    useEffect(() => {
-      if (first.current) return;
-      reconfigure(compartments.user, extensions ?? []);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extensions]);
-
-    // Controlled value: apply outside changes without echoing onChange
-    useEffect(() => {
-      const view = viewRef.current;
-      if (!view) return;
-      const current = view.state.doc.toString();
-      if (value === current) return;
-      const head = Math.min(view.state.selection.main.head, value.length);
-      view.dispatch({
-        changes: { from: 0, to: current.length, insert: value },
-        selection: { anchor: head },
-        annotations: [External.of(true)],
-      });
-    }, [value]);
-
-    useEffect(() => {
-      first.current = false;
-    }, []);
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        focus: () => viewRef.current?.focus(),
-        blur: () => viewRef.current?.contentDOM.blur(),
-        insertVariable: (path: string) => {
-          const view = viewRef.current;
-          if (!view) return;
-          const insert = `${delimiters.open}${path}${delimiters.close}`;
-          const { from, to } = view.state.selection.main;
-          view.dispatch({
-            changes: { from, to, insert },
-            selection: { anchor: from + insert.length },
-            userEvent: 'input',
-          });
-          view.focus();
-        },
-        openSuggestions: () => {
-          const view = viewRef.current;
-          if (!view) return;
-          view.focus();
-          if (completionStatus(view.state) === null) startCompletion(view);
-        },
-        get view() {
-          return viewRef.current;
-        },
-      }),
-      [delimiters.open, delimiters.close]
-    );
-
+  if (!Editor) {
+    const { extensions: _extensions, ...rest } = props;
     return (
-      <div
-        ref={hostRef}
-        className={className ? `tam-root ${className}` : 'tam-root'}
-        style={style}
-        data-scheme={colorScheme}
-        data-multiline={String(multiline)}
-        data-disabled={String(disabled)}
+      <TemplateTextarea
+        ref={area}
+        {...rest}
+        // The editor sizes to its content, so the stand-in does too
+        rows={props.rows ?? 1}
+        className={props.className ? `tam-loading ${props.className}` : 'tam-loading'}
       />
     );
   }
-);
+  const start = handoff.current;
+  return (
+    <Editor
+      ref={editor}
+      {...props}
+      autoFocus={props.autoFocus || start?.focused}
+      initialSelection={start?.focused ? start.selection : undefined}
+    />
+  );
+});

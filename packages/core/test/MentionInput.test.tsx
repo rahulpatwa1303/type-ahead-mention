@@ -1,6 +1,6 @@
 import { act, render } from '@testing-library/react';
 import { createRef, useState } from 'react';
-import { MentionInput, type MentionInputHandle } from '../src/MentionInput';
+import { MentionInput, preloadEditor, type MentionInputHandle } from '../src/MentionInput';
 import { STYLE_ID } from '../src/styles';
 import { data } from './fixtures';
 
@@ -21,7 +21,9 @@ function Controlled(props: { initial: string; onValue?: (v: string) => void; han
   );
 }
 
-describe('<MentionInput />', () => {
+describe('<MentionInput /> (editor loaded)', () => {
+  beforeAll(() => preloadEditor());
+
   it('renders the value, a visible placeholder, and injects styles once', () => {
     const { container, rerender } = render(<Controlled initial="" />);
     expect(container.querySelector('.cm-placeholder')?.textContent).toBe('Type {{');

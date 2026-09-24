@@ -3,9 +3,9 @@ import { Check, Copy, Minus, Package, X } from 'lucide-react';
 import { Github } from './GithubIcon';
 import {
   MentionInput,
+  TemplateTextarea,
   replaceMentions,
   resolveTemplate,
-  useMentionSuggestions,
   validateTemplate,
   type MentionSource,
 } from 'type-ahead-mention';
@@ -70,16 +70,19 @@ function useCarbon(): [boolean, (v: boolean) => void] {
 
 const specimenData = samples.prompt.records[0].data;
 
-function PlainTextareaSpecimen() {
-  const { getInputProps, SuggestionPopper } = useMentionSuggestions({
-    data: specimenData,
-    defaultValue: 'Plain <textarea>: {{ticket.',
-  });
+function LightFieldSpecimen({ carbon }: { carbon: boolean }) {
+  const [value, setValue] = useState('No editor here: {{ticket.subject}} for @[Ada Lovelace](u_01), cc @');
   return (
-    <>
-      <textarea className="plain-field" rows={2} aria-label="Plain textarea example" {...getInputProps<HTMLTextAreaElement>()} />
-      {SuggestionPopper}
-    </>
+    <TemplateTextarea
+      value={value}
+      onChange={setValue}
+      suggestions={specimenData}
+      mentions={peopleSource}
+      multiline
+      rows={2}
+      colorScheme={carbon ? 'dark' : 'light'}
+      aria-label="Light field example"
+    />
   );
 }
 
@@ -414,14 +417,15 @@ export default function App() {
             </div>
             <div className="specimen">
               <div className="specimen-note">
-                <h3>Or no editor at all</h3>
+                <h3>Or skip the editor: 6.7 kB</h3>
                 <p>
-                  <code>useMentionSuggestions()</code> adds the same completion to your own{' '}
-                  <code>{'<input>'}</code> or <code>{'<textarea>'}</code>, with combobox ARIA.
+                  <code>{'<TemplateTextarea>'}</code> is a plain <code>{'<textarea>'}</code> with the same
+                  completion, highlighting, typo underlines and @mentions, and no CodeMirror. For your own
+                  input, <code>useMentionSuggestions()</code> is 5.7 kB.
                 </p>
               </div>
               <div className="specimen-field">
-                <PlainTextareaSpecimen />
+                <LightFieldSpecimen carbon={carbon} />
               </div>
             </div>
           </div>
@@ -431,7 +435,9 @@ export default function App() {
           <div className="part-head">
             <h2 id="setup-title">Setup</h2>
             <p>
-              One package. CodeMirror ships as a dependency, so there is nothing else to install. React 18 or 19.
+              One package, React 18 or 19. The first load is 7 kB. <code>{'<MentionInput>'}</code> fetches
+              CodeMirror (about 100 kB) the first time it renders and shows a plain field until then.{' '}
+              <code>{'<TemplateTextarea>'}</code> never fetches it.
             </p>
           </div>
           <div className="setup">
@@ -564,9 +570,10 @@ export default function App() {
             </a>
           </div>
           <ul className="band-facts">
-            <li>10.7 kB gzipped, plus CodeMirror</li>
+            <li>7 kB first load</li>
+            <li>CodeMirror loads with the editor</li>
             <li>TypeScript types, ESM and CJS</li>
-            <li>53 tests</li>
+            <li>61 tests</li>
             <li>MIT license</li>
           </ul>
         </div>

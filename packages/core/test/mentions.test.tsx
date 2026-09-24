@@ -4,7 +4,7 @@ import { EditorView } from '@codemirror/view';
 import { render } from '@testing-library/react';
 import { createRef } from 'react';
 import { mentionCompletionSource, templateVariables, type MentionSource } from '../src/codemirror';
-import { MentionInput, type MentionInputHandle } from '../src/MentionInput';
+import { MentionInput, preloadEditor, type MentionInputHandle } from '../src/MentionInput';
 import { formatMention, getMentionMatch, parseMentions, replaceMentions } from '../src/template';
 
 const people = [
@@ -94,6 +94,8 @@ describe('mentionCompletionSource', () => {
 });
 
 describe('mention chips', () => {
+  beforeAll(() => preloadEditor());
+
   it('renders stored mentions as atomic chips with avatars', async () => {
     const source: MentionSource = { search: () => people, getItem: (id) => people.find((p) => p.id === id) };
     const handle = createRef<MentionInputHandle>();

@@ -14,6 +14,8 @@
 npm install type-ahead-mention
 ```
 
+7 kB on first load. The full editor fetches CodeMirror only when it renders, and `<TemplateTextarea>` never does ([sizes](./packages/core/README.md#size)).
+
 ```tsx
 import { MentionInput, useMentionResolver } from 'type-ahead-mention';
 

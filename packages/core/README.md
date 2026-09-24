@@ -14,7 +14,22 @@
 npm install type-ahead-mention
 ```
 
-That's the only install. CodeMirror 6 comes as a dependency; React 18 or 19 is the only peer.
+That's the only install; React 18 or 19 is the only peer.
+
+## Size
+
+You pay only for what you render:
+
+| You use | First load (min + gzip) | Later |
+|---|---|---|
+| `resolveTemplate`, `validateTemplate`, … | 0.8 kB | |
+| `useMentionSuggestions` (your own `<textarea>`) | 5.7 kB | |
+| `<TemplateTextarea>` (light field, no CodeMirror) | 6.7 kB | |
+| `<MentionInput>` (full editor) | 7.1 kB | ~100 kB of CodeMirror, fetched the first time it renders |
+
+`<MentionInput>` shows a `<TemplateTextarea>` with the same value right away, which is already usable, and swaps in the editor when CodeMirror arrives. Call `preloadEditor()` to start the download earlier, e.g. on hover or route change.
+
+**Which one?** Start with `<TemplateTextarea>`. Switch to `<MentionInput>` for long documents, exact chip behaviour, undo history across chips, or CodeMirror extensions.
 
 ## Quick start
 
@@ -51,7 +66,7 @@ export function PromptEditor() {
 - **@mentions.** Async search with avatars; picks are stored as `@[Ada Lovelace](u_42)` and shown as chips that delete as one unit.
 - **Keyboard first.** ↑/↓ to move, Enter or Tab to accept, Esc to close.
 - **Themeable.** Light, dark or `auto`, and every color, radius and padding is a `--tam-*` CSS variable.
-- **No editor option.** `useMentionSuggestions()` adds the same completion to your own `<input>` or `<textarea>`.
+- **Light option.** `<TemplateTextarea>` does all of this on a real `<textarea>` (6.7 kB, no CodeMirror), and `useMentionSuggestions()` adds it to your own `<input>` or `<textarea>`.
 
 ## `<MentionInput>`
 
@@ -105,7 +120,7 @@ replaceMentions('Ask @[Ada](u_42)');               // 'Ask @Ada'
 replaceMentions('Ask @[Ada](u_42)', (m) => `<@${m.id}>`); // 'Ask <@u_42>'
 ```
 
-Mentions are available in `<MentionInput>` (not yet in the plain-textarea hook).
+Mentions work the same in `<TemplateTextarea>` and `useMentionSuggestions`. There, the stored text stays visible with the brackets and id dimmed, and Backspace still removes a mention whole.
 
 ### Ref handle
 
@@ -114,8 +129,11 @@ const ref = useRef<MentionInputHandle>(null);
 
 ref.current?.insertVariable('user.name'); // inserts {{user.name}} at the cursor
 ref.current?.openSuggestions();
+ref.current?.acceptSuggestion(); // → false if the list isn't open
+ref.current?.moveSuggestion(1); // highlight the next row
+ref.current?.isSuggesting();
 ref.current?.focus();
-ref.current?.view; // the CodeMirror EditorView
+ref.current?.view; // the CodeMirror EditorView, or null until it has loaded
 ```
 
 ### Theming
@@ -172,9 +190,19 @@ import type { TemplatePath } from 'type-ahead-mention';
 type Path = TemplatePath<typeof data>; // 'user' | 'user.name' | 'ticket.messages.0.text' | …
 ```
 
-## Plain `<input>` / `<textarea>`: `useMentionSuggestions`
+## `<TemplateTextarea>`: the light field
 
-Use this when you don't want CodeMirror. The list renders in a portal, follows the caret, and has combobox/listbox ARIA.
+It takes the same props as `<MentionInput>` (except `extensions`), plus `rows`. It's a real `<textarea>` over a backdrop that draws the highlights, so the browser keeps handling typing, IME, spellcheck and undo.
+
+```tsx
+import { TemplateTextarea } from 'type-ahead-mention';
+
+<TemplateTextarea value={text} onChange={setText} suggestions={data} mentions={people} multiline rows={4} />;
+```
+
+## Your own `<input>` / `<textarea>`: `useMentionSuggestions`
+
+The list renders in a portal, follows the caret, and has combobox/listbox ARIA.
 
 ```tsx
 import { useMentionSuggestions } from 'type-ahead-mention';
@@ -184,6 +212,7 @@ function Field() {
     data,
     defaultValue: 'Hello {{',
     // or controlled: value, onChange
+    mentions: people, // optional
   });
   return (
     <>
@@ -194,12 +223,12 @@ function Field() {
 }
 ```
 
-It also returns `value`, `setValue`, `suggestions`, `activeIndex`, `isOpen`, `select(item)` and `close()` if you'd rather render the list yourself.
+It also returns `value`, `setValue`, `options`, `activeIndex`, `isOpen`, `select(index)` and `close()` if you'd rather render the list yourself.
 
 ## Already using CodeMirror?
 
 ```ts
-import { templateVariables } from 'type-ahead-mention';
+import { templateVariables } from 'type-ahead-mention/codemirror';
 
 new EditorView({
   extensions: [basicSetup, templateVariables({ data, delimiters: { open: '{{', close: '}}' } })],
@@ -209,6 +238,7 @@ new EditorView({
 ## Upgrading from v2
 
 - `@uiw/react-codemirror`, `react-popper`, `@popperjs/core` and `get-caret-position` are no longer needed. You can uninstall them.
+- `<MentionInput>` now loads CodeMirror on demand; `ref.current.view` is `null` until it has loaded.
 - `codeMirrorProps` is replaced by `extensions` and the ref handle.
 - The `style` prop now styles the outer box without a double border. Theme with `--tam-*` variables.
 - `useMentionSuggestions(initialValue, data)` still works, but prefer `useMentionSuggestions({ data, defaultValue })`.

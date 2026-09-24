@@ -2,54 +2,74 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { previewValue, type SuggestionItem } from './template';
+
+/** One row in the suggestion list. */
+export interface PopupOption {
+  id: string;
+  label: string;
+  /** Right-aligned secondary text: a value preview or a description */
+  detail?: string;
+  avatar?: string;
+  /** Shows a trailing `.`: selecting opens the next level */
+  branch?: boolean;
+  /** A non-selectable message row, like "Searching…" */
+  status?: boolean;
+  /** Show an avatar box (with initials when there's no image) */
+  person?: boolean;
+}
 
 export interface SuggestionPopperProps {
-  items: SuggestionItem[];
+  options: PopupOption[];
   activeIndex: number;
-  onSelect: (item: SuggestionItem) => void;
+  onSelect: (index: number) => void;
   /** Viewport position of the list, or null to hide it */
   position: { top: number; left: number } | null;
   /** `id` of the listbox; option ids derive from it */
   id: string;
-  /** Show a value preview next to each item */
-  showValues?: boolean;
+  colorScheme?: 'light' | 'dark' | 'auto';
   className?: string;
 }
 
-/** The suggestion list used by `useMentionSuggestions`. Rendered in a portal on `document.body`. */
+/** The suggestion list used by the plain-textarea field. Rendered in a portal on `document.body`. */
 export const SuggestionPopper: React.FC<SuggestionPopperProps> = ({
-  items,
+  options,
   activeIndex,
   onSelect,
   position,
   id,
-  showValues = true,
+  colorScheme = 'light',
   className,
 }) => {
-  if (!position || items.length === 0 || typeof document === 'undefined') return null;
+  if (!position || options.length === 0 || typeof document === 'undefined') return null;
 
   return createPortal(
     <ul
       id={id}
       role="listbox"
+      data-scheme={colorScheme}
       className={className ? `tam-root tam-popup ${className}` : 'tam-root tam-popup'}
       style={{ top: position.top, left: position.left }}
     >
-      {items.map((item, index) => (
+      {options.map((option, index) => (
         <li
-          key={item.path}
+          key={option.id}
           id={`${id}-${index}`}
           role="option"
-          aria-selected={index === activeIndex}
-          data-branch={String(item.isBranch)}
-          className="tam-popup-option"
+          aria-selected={!option.status && index === activeIndex}
+          aria-disabled={option.status || undefined}
+          data-branch={String(!!option.branch)}
+          className={option.status ? 'tam-popup-option tam-status' : 'tam-popup-option'}
           // Keep focus in the input
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => onSelect(item)}
+          onClick={() => !option.status && onSelect(index)}
         >
-          <span className="tam-popup-label">{item.key}</span>
-          {showValues && <span className="tam-popup-detail">{previewValue(item.value)}</span>}
+          {option.person && (
+            <span className="tam-option-avatar" aria-hidden="true">
+              {option.avatar ? <img src={option.avatar} alt="" /> : option.label.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          <span className="tam-popup-label">{option.label}</span>
+          {option.detail && <span className="tam-popup-detail">{option.detail}</span>}
         </li>
       ))}
     </ul>,

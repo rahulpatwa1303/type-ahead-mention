@@ -5,6 +5,11 @@
 A rewrite focused on template variables. There are breaking changes; see "Upgrading from v2" in the README.
 
 ### Added
+- `<TemplateTextarea>`: the light field. It's a real `<textarea>` with a highlight backdrop and the same completion, typo underlines and @mentions, with no CodeMirror (6.7 kB).
+- `<MentionInput>` loads CodeMirror on demand. First load is 7.1 kB, and the editor (~100 kB) arrives when it first renders, with a `<TemplateTextarea>` shown until then. `preloadEditor()` starts the download early.
+- Tree-shakeable: the helpers alone are 0.8 kB and `useMentionSuggestions` is 5.7 kB. The CodeMirror extensions moved to `type-ahead-mention/codemirror`.
+- Ref handle: `acceptSuggestion()`, `moveSuggestion(by)`, `isSuggesting()`.
+- `useMentionSuggestions` supports `mentions` (with atomic Backspace/Delete) and returns `options` / `select(index)`.
 - `@mentions`: the `mentions` prop takes one or more `{ trigger, search, debounce, getItem }` sources. Search can be sync or async (debounced, cached, aborted through `signal`), and the list shows avatars plus "Searching…" and "No matches" rows. Picks are stored as `@[Label](id)` and shown as atomic chips. There are helpers too: `parseMentions`, `replaceMentions`, `formatMention`, `getMentionMatch`.
 - Value previews in the suggestion list (`"Ada Lovelace"`, `{3 keys}`, `[2 items]`) plus a full-JSON info panel.
 - Variables shown as chips in the text, and unknown paths underlined (`highlight`, `validate` props).

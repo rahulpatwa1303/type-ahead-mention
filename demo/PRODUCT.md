@@ -20,12 +20,13 @@ Evaluated inside a browser tab next to the developer's own code. They'll try typ
 
 ## Capabilities and Constraints
 - `<MentionInput>` (CodeMirror 6): single-line or multiline, value previews in suggestions, variable chips, wavy-underline for unknown paths, auto-closing `}}`, custom delimiters (`{{ }}`, `${ }`, `[[ ]]`…), light/dark/auto color scheme, CSS-variable theming, `onSubmit`, ref handle (`insertVariable`, `focus`, `openSuggestions`), disabled/readOnly, aria-label/id.
-- `@mentions` via `mentions={{ trigger, search, getItem }}`: sync or async search with debouncing and caching, avatar rows, "Searching…" and "No matches" rows; stored as `@[Label](id)` and shown as atomic chips. Helpers `parseMentions`, `replaceMentions`, `formatMention`. MentionInput only (not the plain-textarea hook).
+- `@mentions` via `mentions={{ trigger, search, getItem }}`: sync or async search with debouncing and caching, avatar rows, "Searching…" and "No matches" rows; stored as `@[Label](id)` and shown as atomic chips. Helpers `parseMentions`, `replaceMentions`, `formatMention`. Works in MentionInput, TemplateTextarea and useMentionSuggestions.
 - Rich text (bold, lists, embeds) is deliberately out of scope (confirmed by the user, 2026-09-24).
 - `useMentionSuggestions`: same completion for a plain `<input>`/`<textarea>` (combobox ARIA, portal list).
 - Pure helpers: `resolveTemplate`, `validateTemplate`, `parseTemplate`, `getValueAtPath`, `TemplatePath<T>` type.
 - CodeMirror extension `templateVariables()` for existing CodeMirror editors.
-- One install: CodeMirror packages are regular dependencies; only React/ReactDOM are peers. MIT licensed. Tested with Vitest (53 tests).
+- One install: CodeMirror packages are regular dependencies; only React/ReactDOM are peers. MIT licensed. Tested with Vitest (61 tests).
+- Size (measured 2026-09-24, min+gzip): helpers 0.8 kB; useMentionSuggestions 5.7 kB; TemplateTextarea 6.7 kB; MentionInput 7.1 kB first load + ~100 kB CodeMirror loaded when it first renders. CodeMirror extensions at `type-ahead-mention/codemirror`.
 - Package name stays `type-ahead-mention` (confirmed by the user, 2026-09-24).
 - Landing page lives in `demo/` (Vite + React), deployed to GitHub Pages at `https://rahulpatwa1303.github.io/type-ahead-mention/`, and imports the library from source.
 

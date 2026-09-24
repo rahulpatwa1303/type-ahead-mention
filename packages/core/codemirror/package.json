@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "main": "../dist/codemirror.cjs",
+  "module": "../dist/codemirror.js",
+  "types": "../dist/codemirror.d.cts"
+}

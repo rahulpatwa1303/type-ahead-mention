@@ -380,7 +380,8 @@ h1 {
 .field:focus-within {
   background: color-mix(in srgb, var(--ink) 3%, var(--field));
 }
-.field-template .cm-content {
+.field-template .cm-content,
+.field-template .tam-area > .tam-backdrop {
   min-height: 9.6em;
 }
 .field-output .typed {

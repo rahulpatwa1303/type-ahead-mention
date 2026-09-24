@@ -1,9 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  acceptCompletion,
-  completionStatus,
-  moveCompletionSelection,
-} from '@codemirror/autocomplete';
 import { Pause, Play, RotateCcw, StepForward, X } from 'lucide-react';
 import {
   MentionInput,
@@ -63,6 +58,7 @@ export function Hero({ carbon }: { carbon: boolean }) {
     []
   );
   const cursor = useRef(0);
+  const caretPlaced = useRef(false);
   const timer = useRef<number>();
 
   const record = sample.records[recordIndex];
@@ -86,8 +82,13 @@ export function Hero({ carbon }: { carbon: boolean }) {
   // Run one atom. Returns the delay before the next one.
   const runAtom = useCallback(
     (atom: Atom): number => {
+      // The editor loads on demand; wait for it
       const view = handle.current?.view;
-      if (!view) return 100;
+      if (!view) return -100;
+      if (!caretPlaced.current) {
+        view.dispatch({ selection: { anchor: view.state.doc.length } });
+        caretPlaced.current = true;
+      }
       switch (atom.kind) {
         case 'char': {
           const pos = view.state.selection.main.head;
@@ -99,12 +100,11 @@ export function Hero({ carbon }: { carbon: boolean }) {
           return atom.delay;
         }
         case 'accept':
-          if (completionStatus(view.state) !== 'active') return -120; // retry shortly
-          acceptCompletion(view);
+          if (!handle.current!.acceptSuggestion()) return -120; // list not open yet; retry shortly
           return 260;
         case 'down':
-          if (completionStatus(view.state) !== 'active') return -120;
-          moveCompletionSelection(true)(view);
+          if (!handle.current!.isSuggesting()) return -120;
+          handle.current!.moveSuggestion(1);
           return 260;
         case 'wait':
           return atom.ms;
@@ -131,9 +131,6 @@ export function Hero({ carbon }: { carbon: boolean }) {
 
   useEffect(() => {
     if (crank !== 'playing') return;
-    // Put the caret at the end of the preset before typing
-    const view = handle.current?.view;
-    if (view && cursor.current === 0) view.dispatch({ selection: { anchor: view.state.doc.length } });
     timer.current = window.setTimeout(tick, 400);
     return () => window.clearTimeout(timer.current);
   }, [crank, tick]);
@@ -141,6 +138,7 @@ export function Hero({ carbon }: { carbon: boolean }) {
   const replay = () => {
     window.clearTimeout(timer.current);
     cursor.current = 0;
+    caretPlaced.current = false;
     setKind('prompt');
     setTemplate(samples.prompt.preset);
     setRecordIndex(0);

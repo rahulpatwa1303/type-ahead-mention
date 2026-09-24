@@ -1,6 +1,6 @@
 // useMentionSuggestions.tsx
-// Variable autocomplete for a plain <input> or <textarea>, for when you
-// don't want CodeMirror.
+// Variable and @mention autocomplete for a plain <input> or <textarea>.
+// No CodeMirror.
 
 import React, {
   useCallback,
@@ -12,14 +12,20 @@ import React, {
   type KeyboardEvent,
 } from 'react';
 import { getCaretRect } from './caret';
-import { SuggestionPopper } from './SuggestionPopper';
+import { searchMentions, toSources, type MentionSource } from './mentions';
+import { SuggestionPopper, type PopupOption } from './SuggestionPopper';
 import { injectStyles } from './styles';
 import {
   DEFAULT_DELIMITERS,
   filterSuggestions,
+  formatMention,
   getCompletionMatch,
+  getMentionMatch,
+  parseMentions,
+  previewValue,
   type CompletionMatch,
   type Delimiters,
+  type MentionItem,
   type SuggestionItem,
   type SuggestionNode,
 } from './template';
@@ -35,13 +41,36 @@ export interface UseMentionSuggestionsOptions {
   onChange?: (value: string) => void;
   delimiters?: Delimiters;
   showValues?: boolean;
+  /** Suggest people after `@`, stored as `@[Label](id)` */
+  mentions?: MentionSource | MentionSource[];
+  colorScheme?: 'light' | 'dark' | 'auto';
 }
 
-interface OpenState {
-  match: CompletionMatch;
-  items: SuggestionItem[];
-  position: { top: number; left: number };
-}
+type OpenState = { position: { top: number; left: number } } & (
+  | { kind: 'variable'; match: CompletionMatch; items: SuggestionItem[] }
+  | { kind: 'mention'; trigger: string; from: number; to: number; items: MentionItem[] | null }
+);
+
+const optionsFor = (open: OpenState | null, showValues: boolean): PopupOption[] => {
+  if (!open) return [];
+  if (open.kind === 'variable') {
+    return open.items.map((item) => ({
+      id: item.path,
+      label: item.key,
+      detail: showValues ? previewValue(item.value) : undefined,
+      branch: item.isBranch,
+    }));
+  }
+  if (open.items === null) return [{ id: 'status', label: 'Searching…', status: true }];
+  if (open.items.length === 0) return [{ id: 'status', label: 'No matches', status: true }];
+  return open.items.map((item) => ({
+    id: item.id,
+    label: item.label,
+    detail: item.description,
+    avatar: item.avatar,
+    person: true,
+  }));
+};
 
 /**
  * @example
@@ -68,6 +97,8 @@ function useImpl({
   onChange,
   delimiters = DEFAULT_DELIMITERS,
   showValues = true,
+  mentions,
+  colorScheme = 'light',
 }: UseMentionSuggestionsOptions) {
   const [internal, setInternal] = useState(defaultValue);
   const value = controlled ?? internal;
@@ -76,6 +107,8 @@ function useImpl({
   const inputRef = useRef<Field | null>(null);
   const pendingCursor = useRef<number | null>(null);
   const listId = `tam-${useId().replace(/:/g, '')}`;
+  const sources = toSources(mentions);
+  const triggers = sources.map((s) => s.trigger ?? '@');
 
   useEffect(() => injectStyles(), []);
 
@@ -87,19 +120,49 @@ function useImpl({
     [controlled, onChange]
   );
 
-  const refresh = useCallback(
-    (el: Field) => {
-      const cursor = el.selectionStart;
-      if (cursor === null || cursor !== el.selectionEnd) return setOpen(null);
-      const match = getCompletionMatch(el.value, cursor, data, delimiters);
-      const items = match ? filterSuggestions(match.items, match.query) : [];
-      if (!match || items.length === 0) return setOpen(null);
-      const caret = getCaretRect(el, match.from);
-      setOpen({ match, items, position: { top: caret.top + caret.height + 4, left: caret.left } });
+  const positionAt = (el: Field, offset: number) => {
+    const caret = getCaretRect(el, offset);
+    return { top: caret.top + caret.height + 4, left: caret.left };
+  };
+
+  const refreshRef = useRef<(el: Field) => void>(() => {});
+  const refresh = (el: Field) => {
+    const cursor = el.selectionStart;
+    if (cursor === null || cursor !== el.selectionEnd) return setOpen(null);
+
+    const match = getCompletionMatch(el.value, cursor, data, delimiters);
+    if (match) {
+      const items = filterSuggestions(match.items, match.query);
+      if (items.length === 0) return setOpen(null);
+      setOpen({ kind: 'variable', match, items, position: positionAt(el, match.from) });
       setActiveIndex(0);
-    },
-    [data, delimiters]
-  );
+      return;
+    }
+
+    for (const source of sources) {
+      const trigger = source.trigger ?? '@';
+      const m = getMentionMatch(el.value, cursor, trigger);
+      if (!m) continue;
+      const items = searchMentions(source, m.query, () => {
+        // Results arrived; show them if the field still has focus
+        if (inputRef.current && inputRef.current.ownerDocument.activeElement === inputRef.current) {
+          refreshRef.current(inputRef.current);
+        }
+      });
+      setOpen((prev) => ({
+        kind: 'mention',
+        trigger,
+        from: m.from,
+        to: m.to,
+        items,
+        position: prev?.kind === 'mention' && prev.from === m.from ? prev.position : positionAt(el, m.from),
+      }));
+      setActiveIndex(0);
+      return;
+    }
+    setOpen(null);
+  };
+  refreshRef.current = refresh;
 
   // The list is position: fixed, so follow the caret when anything scrolls or resizes
   const isOpen = open !== null;
@@ -110,8 +173,8 @@ function useImpl({
       if (!el) return;
       setOpen((current) => {
         if (!current) return current;
-        const caret = getCaretRect(el, current.match.from);
-        return { ...current, position: { top: caret.top + caret.height + 4, left: caret.left } };
+        const at = current.kind === 'variable' ? current.match.from : current.from;
+        return { ...current, position: positionAt(el, at) };
       });
     };
     window.addEventListener('scroll', reposition, true);
@@ -128,42 +191,98 @@ function useImpl({
     if (el && pendingCursor.current !== null) {
       el.setSelectionRange(pendingCursor.current, pendingCursor.current);
       pendingCursor.current = null;
-      refresh(el);
+      refreshRef.current(el);
     }
-  }, [value, refresh]);
+  }, [value]);
 
-  const select = useCallback(
-    (item: SuggestionItem) => {
-      if (!open) return;
+  const replace = (from: number, to: number, insert: string, cursor: number) => {
+    pendingCursor.current = cursor;
+    setOpen(null);
+    setValue(value.slice(0, from) + insert + value.slice(to));
+    inputRef.current?.focus();
+  };
+
+  const select = (index: number) => {
+    if (!open) return;
+    if (open.kind === 'variable') {
+      const item = open.items[index];
+      if (!item) return;
       const { match } = open;
       const insert = item.key + (item.isBranch ? '.' : match.hasClose ? '' : delimiters.close);
-      const next = value.slice(0, match.from) + insert + value.slice(match.to);
-      pendingCursor.current =
-        match.from + item.key.length + (item.isBranch ? 1 : delimiters.close.length);
-      setOpen(null);
-      setValue(next);
-      inputRef.current?.focus();
-    },
-    [open, value, delimiters, setValue]
-  );
+      replace(
+        match.from,
+        match.to,
+        insert,
+        match.from + item.key.length + (item.isBranch ? 1 : delimiters.close.length)
+      );
+    } else {
+      const item = open.items?.[index];
+      if (!item) return;
+      const insert = formatMention(item, open.trigger) + ' ';
+      replace(open.from, open.to, insert, open.from + insert.length);
+    }
+  };
 
   const close = useCallback(() => setOpen(null), []);
 
+  const options = optionsFor(open, showValues);
+  const selectable = options.length > 0 && !options[0].status;
+
+  // Mentions behave as one unit: Backspace/Delete remove them whole
+  const deleteMention = (el: Field, key: 'Backspace' | 'Delete') => {
+    if (triggers.length === 0) return false;
+    const { selectionStart: start, selectionEnd: end } = el;
+    if (start === null || start !== end) return false;
+    const hit = parseMentions(el.value, triggers).find((m) =>
+      key === 'Backspace' ? start > m.from && start <= m.to : start >= m.from && start < m.to
+    );
+    if (!hit) return false;
+    replace(hit.from, hit.to, '', hit.from);
+    return true;
+  };
+
+  // A caret placed inside a mention jumps to its nearest edge
+  const snapOutOfMention = (el: Field) => {
+    if (triggers.length === 0) return;
+    const { selectionStart: start, selectionEnd: end } = el;
+    if (start === null || start !== end) return;
+    const hit = parseMentions(el.value, triggers).find((m) => start > m.from && start < m.to);
+    if (!hit) return;
+    const edge = start - hit.from < hit.to - start ? hit.from : hit.to;
+    el.setSelectionRange(edge, edge);
+  };
+
   const onKeyDown = (e: KeyboardEvent<Field>) => {
-    if (!open) return;
-    const count = open.items.length;
-    if (e.key === 'ArrowDown') {
+    if (open && options.length > 0) {
+      if (e.key === 'ArrowDown' && selectable) {
+        e.preventDefault();
+        setActiveIndex((i) => (i + 1) % options.length);
+        return;
+      }
+      if (e.key === 'ArrowUp' && selectable) {
+        e.preventDefault();
+        setActiveIndex((i) => (i - 1 + options.length) % options.length);
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        if (selectable) {
+          e.preventDefault();
+          select(activeIndex);
+          return;
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          return;
+        }
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+        return;
+      }
+    }
+    if ((e.key === 'Backspace' || e.key === 'Delete') && deleteMention(e.currentTarget, e.key)) {
       e.preventDefault();
-      setActiveIndex((i) => (i + 1) % count);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setActiveIndex((i) => (i - 1 + count) % count);
-    } else if (e.key === 'Enter' || e.key === 'Tab') {
-      e.preventDefault();
-      select(open.items[activeIndex]);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      close();
     }
   };
 
@@ -178,23 +297,31 @@ function useImpl({
     },
     onKeyDown,
     onKeyUp: (e: KeyboardEvent<T>) => {
-      if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) refresh(e.currentTarget);
+      if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+        snapOutOfMention(e.currentTarget);
+        refresh(e.currentTarget);
+      }
     },
-    onClick: (e: React.MouseEvent<T>) => refresh(e.currentTarget),
+    onClick: (e: React.MouseEvent<T>) => {
+      snapOutOfMention(e.currentTarget);
+      refresh(e.currentTarget);
+    },
     onBlur: close,
     role: 'combobox' as const,
     'aria-autocomplete': 'list' as const,
     'aria-expanded': open !== null,
     'aria-controls': listId,
-    'aria-activedescendant': open ? `${listId}-${activeIndex}` : undefined,
+    'aria-activedescendant': open && selectable ? `${listId}-${activeIndex}` : undefined,
   });
 
   return {
     value,
     setValue,
     getInputProps,
-    /** The current suggestions, or an empty array when closed */
-    suggestions: open?.items ?? [],
+    /** The rows currently shown, or an empty array when closed */
+    options,
+    /** Variable suggestions currently shown (empty for mentions) */
+    suggestions: open?.kind === 'variable' ? open.items : [],
     activeIndex,
     isOpen: open !== null,
     select,
@@ -203,11 +330,11 @@ function useImpl({
     SuggestionPopper: (
       <SuggestionPopper
         id={listId}
-        items={open?.items ?? []}
+        options={options}
         activeIndex={activeIndex}
         onSelect={select}
         position={open?.position ?? null}
-        showValues={showValues}
+        colorScheme={colorScheme}
       />
     ),
   };
