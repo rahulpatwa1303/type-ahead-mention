@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.gstack/
+
+# Impeccable working files (the surface brief and design system are kept)
+demo/.impeccable/review/
+demo/.impeccable/live/
+demo/.impeccable/*payload*.json
+demo/.impeccable/brief-body.md

@@ -1,0 +1,528 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-24T17:00:00Z",
+  "title": "Design System: type-ahead-mention",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Drop-out Red Ink",
+        "canonical": "oklch(57.5% 0.191 29.7)",
+        "tonalRamp": [
+          "oklch(15% 0.19 29.7)",
+          "oklch(26% 0.19 29.7)",
+          "oklch(37% 0.19 29.7)",
+          "oklch(48% 0.19 29.7)",
+          "oklch(59% 0.19 29.7)",
+          "oklch(70% 0.19 29.7)",
+          "oklch(82% 0.19 29.7)",
+          "oklch(95% 0.19 29.7)"
+        ]
+      },
+      "ink-text": {
+        "role": "primary",
+        "displayName": "Deep Ink for Text",
+        "canonical": "oklch(49.9% 0.173 29.9)",
+        "tonalRamp": [
+          "oklch(15% 0.17 29.9)",
+          "oklch(26% 0.17 29.9)",
+          "oklch(37% 0.17 29.9)",
+          "oklch(48% 0.17 29.9)",
+          "oklch(59% 0.17 29.9)",
+          "oklch(70% 0.17 29.9)",
+          "oklch(82% 0.17 29.9)",
+          "oklch(95% 0.17 29.9)"
+        ]
+      },
+      "ink-rule": {
+        "role": "primary",
+        "displayName": "Ink Rule",
+        "canonical": "color-mix(in srgb, #d23a2b 42%, transparent)",
+        "tonalRamp": [
+          "oklch(15% 0.19 29.7)",
+          "oklch(26% 0.19 29.7)",
+          "oklch(37% 0.19 29.7)",
+          "oklch(48% 0.19 29.7)",
+          "oklch(59% 0.19 29.7)",
+          "oklch(70% 0.19 29.7)",
+          "oklch(82% 0.19 29.7)",
+          "oklch(95% 0.19 29.7)"
+        ]
+      },
+      "ink-tint": {
+        "role": "primary",
+        "displayName": "Ink Tint",
+        "canonical": "color-mix(in srgb, #d23a2b 9%, transparent)",
+        "tonalRamp": [
+          "oklch(15% 0.19 29.7)",
+          "oklch(26% 0.19 29.7)",
+          "oklch(37% 0.19 29.7)",
+          "oklch(48% 0.19 29.7)",
+          "oklch(59% 0.19 29.7)",
+          "oklch(70% 0.19 29.7)",
+          "oklch(82% 0.19 29.7)",
+          "oklch(95% 0.19 29.7)"
+        ]
+      },
+      "ink-tint-strong": {
+        "role": "primary",
+        "displayName": "Strong Tint",
+        "canonical": "color-mix(in srgb, #d23a2b 20%, transparent)",
+        "tonalRamp": [
+          "oklch(15% 0.19 29.7)",
+          "oklch(26% 0.19 29.7)",
+          "oklch(37% 0.19 29.7)",
+          "oklch(48% 0.19 29.7)",
+          "oklch(59% 0.19 29.7)",
+          "oklch(70% 0.19 29.7)",
+          "oklch(82% 0.19 29.7)",
+          "oklch(95% 0.19 29.7)"
+        ]
+      },
+      "bond-paper": {
+        "role": "neutral",
+        "displayName": "Bond Paper",
+        "canonical": "oklch(98.4% 0.004 106.5)",
+        "tonalRamp": [
+          "oklch(15% 0.004 106.5)",
+          "oklch(26% 0.004 106.5)",
+          "oklch(37% 0.004 106.5)",
+          "oklch(48% 0.004 106.5)",
+          "oklch(59% 0.004 106.5)",
+          "oklch(70% 0.004 106.5)",
+          "oklch(82% 0.004 106.5)",
+          "oklch(95% 0.004 106.5)"
+        ]
+      },
+      "field-white": {
+        "role": "neutral",
+        "displayName": "Field White",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(82% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "typed-black": {
+        "role": "neutral",
+        "displayName": "Typewriter Black",
+        "canonical": "oklch(20.5% 0.006 271.1)",
+        "tonalRamp": [
+          "oklch(15% 0.006 271.1)",
+          "oklch(26% 0.006 271.1)",
+          "oklch(37% 0.006 271.1)",
+          "oklch(48% 0.006 271.1)",
+          "oklch(59% 0.006 271.1)",
+          "oklch(70% 0.006 271.1)",
+          "oklch(82% 0.006 271.1)",
+          "oklch(95% 0.006 271.1)"
+        ]
+      },
+      "typed-gray": {
+        "role": "neutral",
+        "displayName": "Typewriter Gray",
+        "canonical": "oklch(43.6% 0.012 273.2)",
+        "tonalRamp": [
+          "oklch(15% 0.012 273.2)",
+          "oklch(26% 0.012 273.2)",
+          "oklch(37% 0.012 273.2)",
+          "oklch(48% 0.012 273.2)",
+          "oklch(59% 0.012 273.2)",
+          "oklch(70% 0.012 273.2)",
+          "oklch(82% 0.012 273.2)",
+          "oklch(95% 0.012 273.2)"
+        ]
+      },
+      "band-text": {
+        "role": "neutral",
+        "displayName": "Reversed White",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(82% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "carbon-paper": {
+        "role": "neutral",
+        "displayName": "Carbon Sheet",
+        "canonical": "oklch(18.7% 0.006 271.1)",
+        "tonalRamp": [
+          "oklch(15% 0.006 271.1)",
+          "oklch(26% 0.006 271.1)",
+          "oklch(37% 0.006 271.1)",
+          "oklch(48% 0.006 271.1)",
+          "oklch(59% 0.006 271.1)",
+          "oklch(70% 0.006 271.1)",
+          "oklch(82% 0.006 271.1)",
+          "oklch(95% 0.006 271.1)"
+        ]
+      },
+      "carbon-field": {
+        "role": "neutral",
+        "displayName": "Carbon Field",
+        "canonical": "oklch(22.3% 0.008 274.6)",
+        "tonalRamp": [
+          "oklch(15% 0.008 274.6)",
+          "oklch(26% 0.008 274.6)",
+          "oklch(37% 0.008 274.6)",
+          "oklch(48% 0.008 274.6)",
+          "oklch(59% 0.008 274.6)",
+          "oklch(70% 0.008 274.6)",
+          "oklch(82% 0.008 274.6)",
+          "oklch(95% 0.008 274.6)"
+        ]
+      },
+      "carbon-ink": {
+        "role": "primary",
+        "displayName": "Lightened Ink",
+        "canonical": "oklch(67% 0.181 30.1)",
+        "tonalRamp": [
+          "oklch(15% 0.18 30.1)",
+          "oklch(26% 0.18 30.1)",
+          "oklch(37% 0.18 30.1)",
+          "oklch(48% 0.18 30.1)",
+          "oklch(59% 0.18 30.1)",
+          "oklch(70% 0.18 30.1)",
+          "oklch(82% 0.18 30.1)",
+          "oklch(95% 0.18 30.1)"
+        ]
+      },
+      "carbon-ink-text": {
+        "role": "primary",
+        "displayName": "Lightened Text Ink",
+        "canonical": "oklch(75.8% 0.145 30)",
+        "tonalRamp": [
+          "oklch(15% 0.145 30)",
+          "oklch(26% 0.145 30)",
+          "oklch(37% 0.145 30)",
+          "oklch(48% 0.145 30)",
+          "oklch(59% 0.145 30)",
+          "oklch(70% 0.145 30)",
+          "oklch(82% 0.145 30)",
+          "oklch(95% 0.145 30)"
+        ]
+      },
+      "carbon-typed": {
+        "role": "neutral",
+        "displayName": "Bone Type",
+        "canonical": "oklch(93.9% 0.007 97.4)",
+        "tonalRamp": [
+          "oklch(15% 0.007 97.4)",
+          "oklch(26% 0.007 97.4)",
+          "oklch(37% 0.007 97.4)",
+          "oklch(48% 0.007 97.4)",
+          "oklch(59% 0.007 97.4)",
+          "oklch(70% 0.007 97.4)",
+          "oklch(82% 0.007 97.4)",
+          "oklch(95% 0.007 97.4)"
+        ]
+      },
+      "carbon-typed-gray": {
+        "role": "neutral",
+        "displayName": "Carbon Gray",
+        "canonical": "oklch(73.9% 0.01 279.6)",
+        "tonalRamp": [
+          "oklch(15% 0.01 279.6)",
+          "oklch(26% 0.01 279.6)",
+          "oklch(37% 0.01 279.6)",
+          "oklch(48% 0.01 279.6)",
+          "oklch(59% 0.01 279.6)",
+          "oklch(70% 0.01 279.6)",
+          "oklch(82% 0.01 279.6)",
+          "oklch(95% 0.01 279.6)"
+        ]
+      },
+      "carbon-band": {
+        "role": "primary",
+        "displayName": "Carbon Band",
+        "canonical": "oklch(54.2% 0.18 30)",
+        "tonalRamp": [
+          "oklch(15% 0.18 30)",
+          "oklch(26% 0.18 30)",
+          "oklch(37% 0.18 30)",
+          "oklch(48% 0.18 30)",
+          "oklch(59% 0.18 30)",
+          "oklch(70% 0.18 30)",
+          "oklch(82% 0.18 30)",
+          "oklch(95% 0.18 30)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page title only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Part titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Specimen and API sub-heads."
+      },
+      "form-number": {
+        "displayName": "Form Number",
+        "purpose": "The Form TAM-3 mark, top left, in ink."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, 34-46ch per block; 16px under 720px."
+      },
+      "label": {
+        "displayName": "Label / Caption",
+        "purpose": "Printed label on every box, table header, copy footer; ink-text, uppercase. Never an eyebrow."
+      },
+      "typed": {
+        "displayName": "Typed",
+        "purpose": "Editor text, merged output, copies, code, record names, status lines."
+      },
+      "typed-display": {
+        "displayName": "Typed Display",
+        "purpose": "The install command in the band."
+      }
+    },
+    "shadows": [
+      {
+        "name": "working-surface-lift",
+        "value": "0 10px 28px -12px rgb(40 12 8 / 0.28), 0 2px 6px -2px rgb(40 12 8 / 0.12)",
+        "purpose": "Hero form, install stub, completion popup and info panel only."
+      },
+      {
+        "name": "working-surface-lift-carbon",
+        "value": "0 12px 32px -12px rgb(0 0 0 / 0.7), 0 2px 6px -2px rgb(0 0 0 / 0.5)",
+        "purpose": "Same surfaces in Carbon mode."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px color-mix(in srgb, #d23a2b 20%, transparent)",
+        "purpose": "Text inputs and standalone editors on focus."
+      },
+      {
+        "name": "carbon-transfer",
+        "value": "text-shadow: 0 0 0.5px currentColor (copy 2), 0 0 0.9px currentColor (copy 3)",
+        "purpose": "Softened type on later carbon copies."
+      }
+    ],
+    "focusRing": {
+      "value": "outline: 2px solid ink; outline-offset: 2px",
+      "onBand": "outline-color: #fff"
+    },
+    "motion": [
+      {
+        "name": "hover",
+        "value": "120ms ease",
+        "purpose": "Color and background changes on links, buttons, checkboxes."
+      },
+      {
+        "name": "hold-red",
+        "value": "1100ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Changed merged value starts solid ink with white type, settles to bold text ink on tint. Off under reduced motion."
+      },
+      {
+        "name": "typewriter-cadence",
+        "value": "autoplay timeline in Hero.tsx",
+        "purpose": "The hero crank types into the real editor; clicking in hands control to the visitor. Reduced motion shows the final state."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stack",
+        "value": "1020px"
+      },
+      {
+        "name": "narrow",
+        "value": "720px"
+      }
+    ],
+    "libraryTheme": {
+      "note": "The embedded editor (packages/core) is themed through --tam-* variables on .sheet .tam-root and .tam-popup.",
+      "map": {
+        "--tam-bg": "field",
+        "--tam-text": "typed",
+        "--tam-muted": "typed-gray",
+        "--tam-border": "ink",
+        "--tam-accent": "ink",
+        "--tam-var-bg": "ink-tint",
+        "--tam-var-text": "ink-text",
+        "--tam-invalid": "ink",
+        "--tam-popup-bg": "field",
+        "--tam-popup-border": "ink",
+        "--tam-selected-bg": "ink",
+        "--tam-selected-text": "#fff",
+        "--tam-radius": "0px",
+        "--tam-padding": "10px 14px"
+      }
+    },
+    "ink-fill": {
+      "light": "#d23a2b",
+      "dark": "#c23526",
+      "use": "Fills carrying white text (primary copy button, selected completion option, icon-button hover, hold-red flash start). Keeps reversed type at >=4.5:1 in carbon mode."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button (copy)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid-ink copy action on the install stub.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"8\" y=\"8\" width=\"14\" height=\"14\"/><path d=\"M4 16V4h12\"/></svg>Copy</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 20px;border:0;border-radius:0;background:#d23a2b;color:#fff;font:650 13.5px/1 'Archivo Variable','Archivo',Arial,sans-serif;font-stretch:80%;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:background 120ms ease}.ds-btn-primary:hover{background:#b02a1d}.ds-btn-primary:focus-visible{outline:2px solid #d23a2b;outline-offset:2px}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary copy action in code-sheet heads.",
+      "html": "<button class=\"ds-btn-outline\">Copy</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:1px solid #d23a2b;border-radius:0;background:transparent;color:#b02a1d;font:650 13px/1 'Archivo Variable','Archivo',Arial,sans-serif;font-stretch:80%;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:background 120ms ease}.ds-btn-outline:hover{background:color-mix(in srgb,#d23a2b 9%,transparent)}.ds-btn-outline:focus-visible{outline:2px solid #d23a2b;outline-offset:2px}"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Crank controls (pause, step, replay).",
+      "html": "<button class=\"ds-btn-icon\" aria-label=\"Replay\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 12a9 9 0 1 0 3-6.7L3 8\"/><path d=\"M3 3v5h5\"/></svg></button>",
+      "css": ".ds-btn-icon{display:grid;place-items:center;width:36px;height:36px;border:1px solid #d23a2b;border-radius:0;background:#fff;color:#b02a1d;cursor:pointer;transition:background 120ms ease,color 120ms ease}.ds-btn-icon:hover{background:#d23a2b;color:#fff}.ds-btn-icon:focus-visible{outline:2px solid #d23a2b;outline-offset:2px}.ds-btn-icon:disabled{opacity:.38;cursor:not-allowed}"
+    },
+    {
+      "name": "Checkbox",
+      "kind": "chip",
+      "refersTo": "checkbox-box",
+      "description": "Square form box marked with a typed X; also used for single-choice rows.",
+      "html": "<label class=\"ds-check\"><input type=\"checkbox\" checked><span class=\"ds-check-box\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"><path d=\"M18 6 6 18M6 6l12 12\"/></svg></span>Prompt template</label>",
+      "css": ".ds-check{position:relative;display:inline-flex;align-items:center;gap:9px;font:15.5px/1.2 'Archivo Variable','Archivo',Arial,sans-serif;color:#16171a;cursor:pointer}.ds-check input{position:absolute;opacity:0;width:1px;height:1px}.ds-check-box{display:inline-grid;place-items:center;width:19px;height:19px;border:1.5px solid #d23a2b;background:#fff;color:#16171a;transition:background 120ms ease}.ds-check:hover .ds-check-box{background:color-mix(in srgb,#d23a2b 9%,transparent)}.ds-check input:not(:checked)+.ds-check-box svg{display:none}.ds-check input:focus-visible+.ds-check-box{outline:2px solid #d23a2b;outline-offset:2px}"
+    },
+    {
+      "name": "Numbered Caption",
+      "kind": "custom",
+      "refersTo": "line-number",
+      "description": "Printed box label with solid-ink field number.",
+      "html": "<div class=\"ds-caption\"><span class=\"ds-line-no\">2</span>Template<span class=\"ds-caption-note\">System prompt for a support agent</span></div>",
+      "css": ".ds-caption{display:flex;align-items:center;font:650 12.5px/1.2 'Archivo Variable','Archivo',Arial,sans-serif;font-stretch:75%;letter-spacing:.055em;text-transform:uppercase;color:#b02a1d}.ds-line-no{display:inline-grid;place-items:center;min-width:19px;height:19px;margin-right:8px;background:#d23a2b;color:#fff;font-stretch:85%;font-weight:750;font-size:12px;letter-spacing:0}.ds-caption-note{margin-left:auto;text-transform:none;letter-spacing:.01em;font-weight:500;font-stretch:85%;color:#4f5158}"
+    },
+    {
+      "name": "Plain Field",
+      "kind": "input",
+      "refersTo": "input-plain",
+      "description": "Typed input with ink border and tint focus halo.",
+      "html": "<input class=\"ds-input\" value=\"Hi {{user.name}}\">",
+      "css": ".ds-input{display:block;width:100%;padding:10px 14px;border:1px solid #d23a2b;border-radius:0;background:#fff;color:#16171a;font:16px/1.55 'Courier Prime','Courier New',monospace}.ds-input:focus,.ds-input:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,#d23a2b 20%,transparent)}"
+    },
+    {
+      "name": "Completion Popup",
+      "kind": "custom",
+      "refersTo": "popup-option-selected",
+      "description": "Square ink-bordered popup with solid-ink selected option.",
+      "html": "<ul class=\"ds-popup\"><li class=\"ds-opt ds-opt-sel\"><span>user</span><span class=\"ds-opt-d\">{4 keys}</span></li><li class=\"ds-opt\"><span>product</span><span class=\"ds-opt-d\">{2 keys}</span></li></ul>",
+      "css": ".ds-popup{list-style:none;margin:0;padding:3px;width:260px;border:1.5px solid #d23a2b;background:#fff;box-shadow:0 10px 28px -12px rgb(40 12 8/.28),0 2px 6px -2px rgb(40 12 8/.12);font:14.5px/1.4 'Courier Prime','Courier New',monospace;color:#16171a}.ds-opt{display:flex;justify-content:space-between;padding:4px 10px;cursor:pointer}.ds-opt:hover{background:color-mix(in srgb,#d23a2b 9%,transparent)}.ds-opt-d{color:#4f5158}.ds-opt-sel{background:#d23a2b;color:#fff}.ds-opt-sel .ds-opt-d{color:rgb(255 255 255/.85)}"
+    },
+    {
+      "name": "Carbon Copy",
+      "kind": "card",
+      "refersTo": "form-box",
+      "description": "Signature merged copy with its underneath sheet out of register.",
+      "html": "<article class=\"ds-copy\"><div class=\"ds-copy-head\"><span class=\"ds-copy-cap\">TAM-3 \u00b7 Shipping</span><span class=\"ds-copy-rec\">To: Ada Lovelace</span></div><pre class=\"ds-copy-body\">Hi Ada, your order #4821 shipped.</pre><div class=\"ds-copy-foot\"><span>White</span><span>Copy 1 of 3</span></div></article>",
+      "css": ".ds-copy{position:relative;isolation:isolate;max-width:320px;border:1px solid #d23a2b;background:#fff}.ds-copy::before{content:'';position:absolute;inset:0;transform:translate(6px,6px);border:1px solid #d23a2b;background:#fafaf7;z-index:-1}.ds-copy-head{display:flex;flex-direction:column;gap:4px;padding:13px 14px 10px;border-bottom:1px solid #d23a2b}.ds-copy-cap,.ds-copy-foot{font:650 12.5px/1.2 'Archivo Variable','Archivo',Arial,sans-serif;font-stretch:75%;letter-spacing:.055em;text-transform:uppercase;color:#b02a1d}.ds-copy-rec{font:14px 'Courier Prime','Courier New',monospace;color:#16171a}.ds-copy-body{margin:0;padding:14px 14px 18px;font:14.5px/1.6 'Courier Prime','Courier New',monospace;color:#16171a;white-space:pre-wrap}.ds-copy-foot{display:flex;justify-content:space-between;padding:8px 14px;border-top:1px dotted #d23a2b;font-size:11.5px}.ds-copy-foot span:first-child{color:#d23a2b;font-weight:800;letter-spacing:.12em}"
+    },
+    {
+      "name": "Header Strip",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Form number, typed revision and links over a 4px double ink rule.",
+      "html": "<header class=\"ds-head\"><div class=\"ds-head-id\"><span class=\"ds-form-no\">Form TAM-3</span><span class=\"ds-rev\">type-ahead-mention \u00b7 v3.0 \u00b7 MIT</span></div><nav class=\"ds-nav\"><a href=\"#\">Copies</a><a href=\"#\">Setup</a><a href=\"#\">GitHub</a></nav></header>",
+      "css": ".ds-head{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:18px 0 14px;border-bottom:4px double #d23a2b;background:#fafaf7}.ds-head-id{display:flex;align-items:baseline;gap:14px}.ds-form-no{font:820 22px/1 'Archivo Variable','Archivo',Arial,sans-serif;font-stretch:68%;letter-spacing:.01em;text-transform:uppercase;color:#d23a2b}.ds-rev{font:13.5px 'Courier Prime','Courier New',monospace;color:#4f5158}.ds-nav{display:flex;gap:22px;font:550 15px 'Archivo Variable','Archivo',Arial,sans-serif}.ds-nav a{color:#16171a;text-decoration:none;transition:color 120ms ease}.ds-nav a:hover{color:#b02a1d}.ds-nav a:focus-visible{outline:2px solid #d23a2b;outline-offset:2px}"
+    },
+    {
+      "name": "Install Band",
+      "kind": "custom",
+      "refersTo": "install-band",
+      "description": "The one full-bleed ink flood with the typed install command.",
+      "html": "<section class=\"ds-band\"><code class=\"ds-band-cmd\">npm install type-ahead-mention</code><div class=\"ds-band-actions\"><button class=\"ds-band-copy\">Copy</button><a class=\"ds-band-link\" href=\"#\">GitHub</a></div></section>",
+      "css": ".ds-band{padding:48px 32px;border-top:3px dotted rgb(255 255 255/.55);background:#d23a2b;color:#fff}.ds-band-cmd{display:block;font:700 2.2rem/1.1 'Courier Prime','Courier New',monospace;letter-spacing:-.01em;overflow-wrap:anywhere}.ds-band-actions{display:flex;gap:12px;margin-top:28px}.ds-band-copy,.ds-band-link{display:inline-flex;align-items:center;min-height:46px;padding:0 20px;border-radius:0;font:650 13.5px/1 'Archivo Variable','Archivo',Arial,sans-serif;font-stretch:80%;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:background 120ms ease}.ds-band-copy{border:1px solid #fff;background:#fff;color:#d23a2b}.ds-band-copy:hover{background:rgb(255 255 255/.88)}.ds-band-link{border:1px solid rgb(255 255 255/.75);color:#fff;text-decoration:none}.ds-band-link:hover{background:rgb(255 255 255/.12)}.ds-band-copy:focus-visible,.ds-band-link:focus-visible{outline:2px solid #fff;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Merge Form",
+    "overview": "The page is a pre-printed office form, Form TAM-3, and data is typed into its blanks. Everything that belongs to the form itself (rules, box outlines, captions, field numbers, perforations, registration marks, the form ID) is printed in one drop-out red ink on white bond. Everything that was filled in (resolved values, code, commands, record names, status lines) is typed in a typewriter face in near-black. The reader should always be able to tell printed from typed at a glance: red and condensed grotesk is the form, black and Courier is the data.\n\nDensity is that of a real form: tight boxed fields with 1px internal rules inside a heavier 1.5px outer box, ruled tables, checkbox rows, square corners everywhere. Depth is almost absent; the sheet is flat, and only the working surfaces (the live form, the install stub, the completion popup) lift slightly off the paper. The one moment of full saturation is the install band, where the ink floods edge to edge and type reverses to white.\n\nDark mode is a carbon copy, not an inverted theme: a carbon-black sheet, the ink lightened so it still reads as red on black, and bone-colored typed values. The toggle is itself a form checkbox labelled \"Carbon\". The favicon and OG image are drawn from the same materials: a square white box with a 3px ink stroke, ink braces, and a black typed bar.",
+    "keyCharacteristics": [
+      "One chromatic hue (drop-out red); everything else is paper, black and gray.",
+      "Two voices: condensed Archivo prints the form, Courier Prime types the data.",
+      "Zero radius on every surface, including the embedded editor and its popup.",
+      "Line weight carries hierarchy: 4px double, 1.5px outer box, 1px inner rule, 3px dotted perforation.",
+      "Motion is typewriter cadence plus the hold-red flash on changed values; nothing else animates.",
+      "Dark mode is \"Carbon\": a carbon copy of the same form."
+    ],
+    "rules": [
+      {
+        "name": "The One Ink Rule",
+        "body": "Red is the only chromatic color. Checks, crosses and partial marks in the comparison table are black and gray, not green and red. A second hue means you are no longer on the form.",
+        "section": "colors"
+      },
+      {
+        "name": "The Printed vs Typed Rule",
+        "body": "If the form printed it, it is red; if someone filled it in, it is black. Merged values stay black (bold) except while they are newly changed.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Flood Rule",
+        "body": "Solid ink fills are small marks (field-number badges, the primary copy button, the selected completion option, the hold-red flash) plus exactly one full-bleed flood: the install band. No other section gets a colored background.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reversed Type Rule",
+        "body": "White type only sits on ink that holds at least 4.5:1: the light-mode ink (4.8:1) or the carbon band red (5.5:1). Never put white text on the lightened carbon ink (3.2:1).",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Hands Rule",
+        "body": "Archivo is the printer, Courier Prime is the typist. Never set a heading or button in Courier, and never set data, code, or a command in Archivo.",
+        "section": "typography"
+      },
+      {
+        "name": "The Width Axis Rule",
+        "body": "Hierarchy comes from width and weight together: narrower and heavier as the element becomes more \"printed\" (display 66%, captions 75%, buttons 80%). Body text stays at 100% width.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lifted Tools Rule",
+        "body": "Only surfaces the visitor is actively using lift off the sheet. Cards, code sheets, tables and copies stay flat.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Underneath Sheet Rule",
+        "body": "A carbon copy may show the sheet beneath it a few pixels out of register (an outlined paper-colored rectangle offset 5\u20137px). This belongs to the carbon-copy stack only; it is not an elevation style for other boxes.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do draw every structural line, caption and number in ink, and every filled-in value in typed black Courier Prime.",
+      "Do keep all corners at 0px, and pass `--tam-radius: 0px` and the ink variables to the library editor wherever it appears.",
+      "Do express hierarchy with line weight: 4px double for the header, 1.5px outer boxes, 1px inner rules, 3px dotted perforations.",
+      "Do label boxes and table columns with the uppercase condensed caption (650, 12.5px, 0.055em) in text ink, numbered with a solid ink badge when the box is part of a sequence.",
+      "Do use text ink, not line ink, for any red text below 18px.",
+      "Do restrict the soft lift shadow to surfaces the visitor operates (live form, install stub, popup).",
+      "Do render dark mode as Carbon: carbon sheet, lightened ink, bone type, and a deeper band red."
+    ],
+    "donts": [
+      "Don't introduce a second chromatic color, gradients, or colored section backgrounds; the band is the only flood.",
+      "Don't set headings, buttons or captions in Courier, or data and code in Archivo.",
+      "Don't put a caption above a section headline as an eyebrow; captions label boxes and columns only.",
+      "Don't put white text on the lightened carbon ink (#f0604d); it is 3.2:1.",
+      "Don't reuse the out-of-register underneath sheet on anything but a carbon-copy stack.",
+      "Don't animate anything beyond typewriter cadence, the hold-red flash, and 120ms hover color changes."
+    ]
+  }
+}

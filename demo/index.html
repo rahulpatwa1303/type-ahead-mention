@@ -2,9 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Type-Ahead-Mention</title>
+    <title>type-ahead-mention: autocomplete for {{template.variables}} in React</title>
+    <meta
+      name="description"
+      content="A React input that autocompletes {{template.variables}} from your data: nested objects and arrays, value previews and typo underlines. For prompt templates, email merge tags and workflow builders."
+    />
+    <link rel="icon" type="image/svg+xml" href="/type-ahead-mention/favicon.svg" />
+    <link rel="canonical" href="https://rahulpatwa1303.github.io/type-ahead-mention/" />
+    <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="type-ahead-mention" />
+    <meta property="og:title" content="Autocomplete for {{template.variables}} in React" />
+    <meta
+      property="og:description"
+      content="Nested paths, value previews and typo underlines for prompt templates, merge tags and workflow builders. npm install type-ahead-mention"
+    />
+    <meta property="og:url" content="https://rahulpatwa1303.github.io/type-ahead-mention/" />
+    <meta property="og:image" content="https://rahulpatwa1303.github.io/type-ahead-mention/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Autocomplete for {{template.variables}} in React" />
+    <meta name="twitter:description" content="Nested paths, value previews and typo underlines. npm install type-ahead-mention" />
+    <meta name="twitter:image" content="https://rahulpatwa1303.github.io/type-ahead-mention/og.png" />
+    <script>
+      try {
+        var saved = localStorage.getItem('tam-carbon');
+        var dark = saved === null ? matchMedia('(prefers-color-scheme: dark)').matches : saved === '1';
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
