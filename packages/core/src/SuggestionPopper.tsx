@@ -1,61 +1,58 @@
 // SuggestionPopper.tsx
 
-import React from "react";
-import { usePopper } from "react-popper";
+import React from 'react';
+import { createPortal } from 'react-dom';
+import { previewValue, type SuggestionItem } from './template';
 
-interface SuggestionPopperProps {
-  suggestions: string[];
-  onSelect: (suggestion: string) => void;
+export interface SuggestionPopperProps {
+  items: SuggestionItem[];
   activeIndex: number;
-  referenceElement: HTMLElement | null;
+  onSelect: (item: SuggestionItem) => void;
+  /** Viewport position of the list, or null to hide it */
+  position: { top: number; left: number } | null;
+  /** `id` of the listbox; option ids derive from it */
+  id: string;
+  /** Show a value preview next to each item */
+  showValues?: boolean;
+  className?: string;
 }
 
+/** The suggestion list used by `useMentionSuggestions`. Rendered in a portal on `document.body`. */
 export const SuggestionPopper: React.FC<SuggestionPopperProps> = ({
-  suggestions,
-  onSelect,
+  items,
   activeIndex,
-  referenceElement,
+  onSelect,
+  position,
+  id,
+  showValues = true,
+  className,
 }) => {
-  const [popperElement, setPopperElement] =
-    React.useState<HTMLDivElement | null>(null);
-  const { styles, attributes } = usePopper(referenceElement, popperElement, {
-    placement: "bottom-start",
-  });
+  if (!position || items.length === 0 || typeof document === 'undefined') return null;
 
-  if (suggestions.length === 0 || !referenceElement) {
-    return null;
-  }
-
-  return (
-    <div
-      ref={setPopperElement}
-      style={{
-        ...styles.popper,
-        zIndex: 1000,
-        background: "white",
-        border: "1px solid #ddd",
-        borderRadius: "4px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        minWidth: "150px",
-      }}
-      {...attributes.popper}
+  return createPortal(
+    <ul
+      id={id}
+      role="listbox"
+      className={className ? `tam-root tam-popup ${className}` : 'tam-root tam-popup'}
+      style={{ top: position.top, left: position.left }}
     >
-      <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-        {suggestions.map((suggestion, index) => (
-          <li
-            key={suggestion}
-            onClick={() => onSelect(suggestion)}
-            style={{
-              padding: "8px 12px",
-              cursor: "pointer",
-              backgroundColor:
-                index === activeIndex ? "#f0f0f0" : "transparent",
-            }}
-          >
-            {suggestion}
-          </li>
-        ))}
-      </ul>
-    </div>
+      {items.map((item, index) => (
+        <li
+          key={item.path}
+          id={`${id}-${index}`}
+          role="option"
+          aria-selected={index === activeIndex}
+          data-branch={String(item.isBranch)}
+          className="tam-popup-option"
+          // Keep focus in the input
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onSelect(item)}
+        >
+          <span className="tam-popup-label">{item.key}</span>
+          {showValues && <span className="tam-popup-detail">{previewValue(item.value)}</span>}
+        </li>
+      ))}
+    </ul>,
+    document.body
   );
 };

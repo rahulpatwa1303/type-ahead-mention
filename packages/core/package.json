@@ -1,68 +1,93 @@
 {
   "name": "type-ahead-mention",
-  "version": "2.0.1",
-  "description": "A powerful React component for mention-based autocompletion with CodeMirror. Supports nested objects and arrays with dot notation.",
-  "main": "./dist/type-ahead-mention.umd.js",
-  "module": "./dist/type-ahead-mention.es.js",
+  "version": "3.0.0",
+  "description": "Autocomplete for {{template.variables}} in React: prompt templates, email merge tags, and workflow builders. Nested objects, arrays, value previews, and unknown-variable highlighting.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/type-ahead-mention.es.js",
-      "require": "./dist/type-ahead-mention.umd.js",
-      "types": "./dist/index.d.ts"
-    }
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
+  "sideEffects": false,
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "keywords": [
     "react",
-    "mention",
+    "template",
+    "template-variables",
+    "variables",
     "autocomplete",
+    "merge-tags",
+    "handlebars",
+    "mustache",
+    "liquid",
+    "prompt",
+    "prompt-template",
+    "llm",
+    "placeholder",
+    "mention",
+    "typeahead",
     "codemirror",
     "input",
     "textarea",
-    "template",
-    "variable",
-    "nested",
-    "array",
+    "email-template",
     "typescript"
   ],
   "author": "Rahul Patwa <rahulpatwa1303@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rahulpatwa1303/type-ahead-mention.git"
+    "url": "git+https://github.com/rahulpatwa1303/type-ahead-mention.git",
+    "directory": "packages/core"
   },
-  "homepage": "https://github.com/rahulpatwa1303/type-ahead-mention#readme",
+  "homepage": "https://rahulpatwa1303.github.io/type-ahead-mention/",
   "bugs": {
     "url": "https://github.com/rahulpatwa1303/type-ahead-mention/issues"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
-    "react-dom": ">=18.0.0",
-    "@codemirror/autocomplete": "^6.0.0",
-    "@codemirror/state": "^6.0.0",
-    "@codemirror/view": "^6.0.0",
-    "@popperjs/core": "^2.0.0",
-    "@uiw/react-codemirror": "^4.0.0",
-    "react-popper": "^2.0.0"
+    "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "get-caret-position": "^0.1.5"
+    "@codemirror/autocomplete": "^6.18.0",
+    "@codemirror/commands": "^6.6.0",
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.30.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5",
-    "vite-plugin-dts": "^3.0.0"
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "jsdom": "^26.0.0",
+    "publint": "^0.3.24",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.1"
   },
   "scripts": {
-    "build": "vite build",
-    "prepublishOnly": "npm run build"
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint:package": "publint && attw --pack .",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   }
 }

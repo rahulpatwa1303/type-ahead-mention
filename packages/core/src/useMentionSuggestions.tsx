@@ -1,159 +1,214 @@
-// useMentionSuggestions.ts
+// useMentionSuggestions.tsx
+// Variable autocomplete for a plain <input> or <textarea>, for when you
+// don't want CodeMirror.
 
-import { useState, useCallback, KeyboardEvent, useRef, useEffect } from "react";
-import { getCaretPosition } from "get-caret-position";
-import { createMentionsExtractor } from "./mention-helpers";
-import { SuggestionPopper } from "./SuggestionPopper"; // Make sure this is imported
-import { SuggestionNode } from "./suggestion-helpers";
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
+import { getCaretRect } from './caret';
+import { SuggestionPopper } from './SuggestionPopper';
+import { injectStyles } from './styles';
+import {
+  DEFAULT_DELIMITERS,
+  filterSuggestions,
+  getCompletionMatch,
+  type CompletionMatch,
+  type Delimiters,
+  type SuggestionItem,
+  type SuggestionNode,
+} from './template';
 
-// The virtual element that Popper.js can use for positioning
-const virtualElement = {
-  getBoundingClientRect: () => ({
-    width: 0,
-    height: 0,
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-  }),
-};
+type Field = HTMLInputElement | HTMLTextAreaElement;
 
-export const useMentionSuggestions = (
+export interface UseMentionSuggestionsOptions {
+  /** Data whose keys are suggested */
+  data: SuggestionNode;
+  /** Controlled value. Omit it to let the hook manage the value. */
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+  delimiters?: Delimiters;
+  showValues?: boolean;
+}
+
+interface OpenState {
+  match: CompletionMatch;
+  items: SuggestionItem[];
+  position: { top: number; left: number };
+}
+
+/**
+ * @example
+ * const { getInputProps, SuggestionPopper } = useMentionSuggestions({ data });
+ * return <><textarea {...getInputProps()} />{SuggestionPopper}</>;
+ */
+export function useMentionSuggestions(options: UseMentionSuggestionsOptions): ReturnType<typeof useImpl>;
+/** @deprecated Pass an options object: `useMentionSuggestions({ defaultValue, data })` */
+export function useMentionSuggestions(
   initialValue: string,
-  suggestionsData: SuggestionNode
-) => {
-  const [value, setValue] = useState(initialValue);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  data: SuggestionNode
+): ReturnType<typeof useImpl>;
+export function useMentionSuggestions(
+  a: UseMentionSuggestionsOptions | string,
+  b?: SuggestionNode
+) {
+  return useImpl(typeof a === 'string' ? { defaultValue: a, data: b ?? {} } : a);
+}
+
+function useImpl({
+  data,
+  value: controlled,
+  defaultValue = '',
+  onChange,
+  delimiters = DEFAULT_DELIMITERS,
+  showValues = true,
+}: UseMentionSuggestionsOptions) {
+  const [internal, setInternal] = useState(defaultValue);
+  const value = controlled ?? internal;
+  const [open, setOpen] = useState<OpenState | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [popperRef, setPopperRef] = useState<HTMLElement | null>(null);
+  const inputRef = useRef<Field | null>(null);
+  const pendingCursor = useRef<number | null>(null);
+  const listId = `tam-${useId().replace(/:/g, '')}`;
 
-  // This ref will hold the actual input/textarea DOM element
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  useEffect(() => injectStyles(), []);
 
-  const getSuggestions = createMentionsExtractor(suggestionsData);
-
-  const updateSuggestions = (
-    target: HTMLInputElement | HTMLTextAreaElement
-  ) => {
-    const { value, selectionStart } = target;
-    if (selectionStart !== null) {
-      const { suggestions: newSuggestions } = getSuggestions(
-        value,
-        selectionStart
-      );
-      setSuggestions(newSuggestions);
-      setActiveIndex(0);
-
-      // If we have suggestions, calculate cursor position and update the virtual element
-      if (newSuggestions.length > 0) {
-        const { top, left } = getCaretPosition(target);
-        const height = 0; // Default height for cursor positioning
-        virtualElement.getBoundingClientRect = () => ({
-          width: 0,
-          height,
-          top: top,
-          right: left,
-          bottom: top + height,
-          left: left,
-        });
-        // Force Popper.js to update
-        setPopperRef(virtualElement as any);
-      }
-    }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setValue(e.target.value);
-    updateSuggestions(e.target);
-  };
-
-  const handleSelect = (suggestion: string) => {
-    const { selectionStart } = inputRef.current!;
-    const { trigger } = getSuggestions(value, selectionStart!);
-
-    if (trigger === null) return;
-
-    // Find where the trigger text starts
-    const triggerStartIndex = value.lastIndexOf(trigger, selectionStart!);
-
-    const textBefore = value.substring(0, triggerStartIndex);
-    const textAfter = value.substring(selectionStart!);
-
-    // Add the selected suggestion, followed by a space for better UX
-    const newValue = `${textBefore}${suggestion} ${textAfter}`;
-
-    setValue(newValue);
-    setSuggestions([]);
-
-    // We need to manually set the cursor position after the update
-    setTimeout(() => {
-      const newCursorPos = (textBefore + suggestion).length + 1;
-      inputRef.current?.focus();
-      inputRef.current?.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  };
-
-  const handleKeyDown = (
-    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    if (suggestions.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setActiveIndex((prev) => (prev + 1) % suggestions.length);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setActiveIndex(
-          (prev) => (prev - 1 + suggestions.length) % suggestions.length
-        );
-      } else if (e.key === "Enter" || e.key === "Tab") {
-        e.preventDefault();
-        handleSelect(suggestions[activeIndex]);
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        setSuggestions([]);
-      }
-    }
-  };
-
-  // This function will be called when the user clicks or uses arrow keys to move the cursor
-  const handleCursorChange = (e: any) => {
-    updateSuggestions(e.target);
-  };
-
-  const getInputProps = () => ({
-    value,
-    onChange: handleChange,
-    onKeyDown: handleKeyDown,
-    // We need these to detect cursor changes from clicks or arrow keys
-    onClick: handleCursorChange,
-    onKeyUp: (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (
-        [
-          "ArrowLeft",
-          "ArrowRight",
-          "ArrowUp",
-          "ArrowDown",
-          "Home",
-          "End",
-        ].includes(e.key)
-      ) {
-        handleCursorChange(e);
-      }
+  const setValue = useCallback(
+    (next: string) => {
+      if (controlled === undefined) setInternal(next);
+      onChange?.(next);
     },
-    ref: inputRef, // Assign the ref to our internal ref
+    [controlled, onChange]
+  );
+
+  const refresh = useCallback(
+    (el: Field) => {
+      const cursor = el.selectionStart;
+      if (cursor === null || cursor !== el.selectionEnd) return setOpen(null);
+      const match = getCompletionMatch(el.value, cursor, data, delimiters);
+      const items = match ? filterSuggestions(match.items, match.query) : [];
+      if (!match || items.length === 0) return setOpen(null);
+      const caret = getCaretRect(el, match.from);
+      setOpen({ match, items, position: { top: caret.top + caret.height + 4, left: caret.left } });
+      setActiveIndex(0);
+    },
+    [data, delimiters]
+  );
+
+  // The list is position: fixed, so follow the caret when anything scrolls or resizes
+  const isOpen = open !== null;
+  useEffect(() => {
+    if (!isOpen) return;
+    const reposition = () => {
+      const el = inputRef.current;
+      if (!el) return;
+      setOpen((current) => {
+        if (!current) return current;
+        const caret = getCaretRect(el, current.match.from);
+        return { ...current, position: { top: caret.top + caret.height + 4, left: caret.left } };
+      });
+    };
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    return () => {
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+    };
+  }, [isOpen]);
+
+  // Put the cursor where a selection wanted it, then reopen for nested keys
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (el && pendingCursor.current !== null) {
+      el.setSelectionRange(pendingCursor.current, pendingCursor.current);
+      pendingCursor.current = null;
+      refresh(el);
+    }
+  }, [value, refresh]);
+
+  const select = useCallback(
+    (item: SuggestionItem) => {
+      if (!open) return;
+      const { match } = open;
+      const insert = item.key + (item.isBranch ? '.' : match.hasClose ? '' : delimiters.close);
+      const next = value.slice(0, match.from) + insert + value.slice(match.to);
+      pendingCursor.current =
+        match.from + item.key.length + (item.isBranch ? 1 : delimiters.close.length);
+      setOpen(null);
+      setValue(next);
+      inputRef.current?.focus();
+    },
+    [open, value, delimiters, setValue]
+  );
+
+  const close = useCallback(() => setOpen(null), []);
+
+  const onKeyDown = (e: KeyboardEvent<Field>) => {
+    if (!open) return;
+    const count = open.items.length;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % count);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + count) % count);
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      select(open.items[activeIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    }
+  };
+
+  const getInputProps = <T extends Field = Field>() => ({
+    value,
+    ref: (el: T | null) => {
+      inputRef.current = el;
+    },
+    onChange: (e: React.ChangeEvent<T>) => {
+      setValue(e.target.value);
+      refresh(e.target);
+    },
+    onKeyDown,
+    onKeyUp: (e: KeyboardEvent<T>) => {
+      if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) refresh(e.currentTarget);
+    },
+    onClick: (e: React.MouseEvent<T>) => refresh(e.currentTarget),
+    onBlur: close,
+    role: 'combobox' as const,
+    'aria-autocomplete': 'list' as const,
+    'aria-expanded': open !== null,
+    'aria-controls': listId,
+    'aria-activedescendant': open ? `${listId}-${activeIndex}` : undefined,
   });
 
   return {
+    value,
+    setValue,
     getInputProps,
+    /** The current suggestions, or an empty array when closed */
+    suggestions: open?.items ?? [],
+    activeIndex,
+    isOpen: open !== null,
+    select,
+    close,
+    /** Render this next to the input */
     SuggestionPopper: (
       <SuggestionPopper
-        suggestions={suggestions}
-        onSelect={handleSelect}
+        id={listId}
+        items={open?.items ?? []}
         activeIndex={activeIndex}
-        referenceElement={popperRef} // Use the state-managed ref
+        onSelect={select}
+        position={open?.position ?? null}
+        showValues={showValues}
       />
     ),
   };
-};
+}

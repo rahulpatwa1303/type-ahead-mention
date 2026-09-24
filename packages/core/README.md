@@ -1,364 +1,191 @@
-# Type-Ahead Mention
+# type-ahead-mention
 
-[![npm version](https://img.shields.io/npm/v/type-ahead-mention.svg)](https://www.npmjs.com/package/type-ahead-mention)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/type-ahead-mention)](https://bundlephobia.com/package/type-ahead-mention)
+**Autocomplete for `{{template.variables}}` in React.** Type `{{user.` and see the real value of every key in your data. Drill into nested objects and arrays, and get unknown variables underlined as you type. Built for prompt templates, email merge tags and workflow builders.
 
-A powerful, flexible React component for mention-based autocompletion powered by CodeMirror. Perfect for building chat apps, note-taking tools, template editors, and more with support for nested objects and arrays.
+[![npm](https://img.shields.io/npm/v/type-ahead-mention?color=d23a2b)](https://www.npmjs.com/package/type-ahead-mention)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/type-ahead-mention?color=d23a2b)](https://bundlephobia.com/package/type-ahead-mention)
+[![license](https://img.shields.io/npm/l/type-ahead-mention?color=d23a2b)](./LICENSE)
 
-[**Live Demo**](https://rahulpatwa1303.github.io/type-ahead-mention/) | [**GitHub**](https://github.com/rahulpatwa1303/type-ahead-mention)
+**[Live demo →](https://rahulpatwa1303.github.io/type-ahead-mention/)**
 
-## ✨ Features
-
-- 🚀 **Powered by CodeMirror** - Robust text editing with excellent performance
-- 🎯 **Smart Nested Suggestions** - Navigate through objects and arrays with dot notation
-- ⌨️ **Full Keyboard Navigation** - Arrow keys, Enter to select, Escape to dismiss
-- 🎨 **Highly Customizable** - Style with CSS-in-JS or custom classes
-- 📝 **Single-line & Multi-line** - Works as both input and textarea
-- 🔧 **Template Resolution** - Built-in hook to resolve variables in your templates
-- 📦 **TypeScript Ready** - Complete type definitions included
-- 🎭 **Zero Config** - Works out of the box with sensible defaults
-- 🪶 **Lightweight** - Only 12KB gzipped with peer dependencies
-
-## 📦 Installation
+![Typing {{user. shows name, plan and locale with their values; picking one closes the variable](https://raw.githubusercontent.com/rahulpatwa1303/type-ahead-mention/master/.github/demo.gif)
 
 ```bash
 npm install type-ahead-mention
 ```
 
-**Peer Dependencies** (install these if not already in your project):
+That's the only install. CodeMirror 6 comes as a dependency; React 18 or 19 is the only peer.
 
-```bash
-npm install react react-dom @codemirror/autocomplete @codemirror/state @codemirror/view @popperjs/core @uiw/react-codemirror react-popper
-```
-
-Or with yarn:
-
-```bash
-yarn add type-ahead-mention
-yarn add react react-dom @codemirror/autocomplete @codemirror/state @codemirror/view @popperjs/core @uiw/react-codemirror react-popper
-```
-
-## 🚀 Quick Start
+## Quick start
 
 ```tsx
-import { MentionInput } from 'type-ahead-mention';
 import { useState } from 'react';
+import { MentionInput, useMentionResolver } from 'type-ahead-mention';
 
-function App() {
-  const [message, setMessage] = useState("Hello {{user.name}}!");
+const data = {
+  user: { name: 'Ada Lovelace', plan: 'Pro' },
+  ticket: { id: 'T-4821', messages: [{ text: 'Hi!' }] },
+};
 
-  const suggestions = {
-    user: {
-      name: "John Doe",
-      email: "john@example.com",
-      roles: ["admin", "editor"]
-    },
-    product: {
-      name: "Awesome Product",
-      price: 99.99
-    }
-  };
+export function PromptEditor() {
+  const [template, setTemplate] = useState('Reply to {{user.name}}');
+  const preview = useMentionResolver(template, data); // "Reply to Ada Lovelace"
 
   return (
-    <MentionInput
-      value={message}
-      onChange={setMessage}
-      suggestions={suggestions}
-      placeholder="Type {{ to start..."
-    />
+    <>
+      <MentionInput value={template} onChange={setTemplate} suggestions={data} multiline />
+      <pre>{preview}</pre>
+    </>
   );
 }
 ```
 
-## 📖 API Reference
+## What it does
 
-### `<MentionInput />`
+- **Completes paths into your data.** `{{` lists the top-level keys; picking an object adds a `.` and opens its keys; picking a leaf closes the variable with `}}`.
+- **Previews values.** Each suggestion shows its value (`"Ada Lovelace"`, `{3 keys}`, `[2 items]`), and the side panel shows the full JSON.
+- **Arrays by index.** `{{ticket.messages.0.text}}`.
+- **Flags typos.** Variables whose path isn't in the data get a wavy underline, and `validateTemplate()` gives you the same list on the server.
+- **Your syntax.** `delimiters={{ open: '${', close: '}' }}`, `[[ ]]`, or `@` with no closing delimiter.
+- **Input or textarea.** Single-line by default: Enter never adds a line, pasted newlines become spaces, and `onSubmit` fires on Enter. Pass `multiline` for textarea behaviour (Mod-Enter submits).
+- **Keyboard first.** ↑/↓ to move, Enter or Tab to accept, Esc to close.
+- **Themeable.** Light, dark or `auto`, and every color, radius and padding is a `--tam-*` CSS variable.
+- **No editor option.** `useMentionSuggestions()` adds the same completion to your own `<input>` or `<textarea>`.
 
-The main component for mention-based autocompletion.
+## `<MentionInput>`
 
-#### Props
+| Prop | Type | Default | |
+|---|---|---|---|
+| `value` | `string` | required | The template text |
+| `onChange` | `(value: string) => void` | required | Called on every edit |
+| `suggestions` | `object` | required | Data to suggest from. Nested objects and arrays work. |
+| `multiline` | `boolean` | `false` | Textarea behaviour |
+| `delimiters` | `{ open: string; close: string }` | `{ open: '{{', close: '}}' }` | Variable syntax |
+| `showValues` | `boolean` | `true` | Value preview next to each suggestion |
+| `highlight` | `boolean` | `true` | Show variables as chips |
+| `validate` | `boolean` | `true` | Underline paths that aren't in `suggestions` |
+| `colorScheme` | `'light' \| 'dark' \| 'auto'` | `'light'` | Built-in themes |
+| `placeholder` | `string` | | |
+| `onSubmit` | `(value: string) => void` | | Enter (single-line) or Mod-Enter (multiline) |
+| `onFocus` / `onBlur` | `() => void` | | |
+| `disabled` / `readOnly` / `autoFocus` | `boolean` | `false` | |
+| `id`, `aria-label`, `aria-describedby` | `string` | | Applied to the editable element |
+| `style` / `className` | | | Applied to the outer box |
+| `extensions` | `Extension[]` | | Extra CodeMirror extensions |
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `value` | `string` | **required** | Current input value |
-| `onChange` | `(value: string) => void` | **required** | Called when value changes |
-| `suggestions` | `SuggestionNode` | **required** | Nested object of suggestion data |
-| `placeholder` | `string` | `''` | Input placeholder text |
-| `multiline` | `boolean` | `false` | Enable textarea mode |
-| `style` | `React.CSSProperties` | - | Custom inline styles |
-| `className` | `string` | - | Custom CSS class |
-
-#### Example
+### Ref handle
 
 ```tsx
-<MentionInput
-  value={template}
-  onChange={setTemplate}
-  suggestions={data}
-  placeholder="Type your message..."
-  multiline={true}
-  style={{ 
-    fontSize: '16px',
-    padding: '12px',
-    borderRadius: '8px'
-  }}
-/>
+const ref = useRef<MentionInputHandle>(null);
+
+ref.current?.insertVariable('user.name'); // inserts {{user.name}} at the cursor
+ref.current?.openSuggestions();
+ref.current?.focus();
+ref.current?.view; // the CodeMirror EditorView
 ```
 
-### `useMentionResolver`
+### Theming
 
-A React hook that resolves template variables in your strings.
+The component injects a small stylesheet once. Override any of these on the component (via `style` or `className`) or on an ancestor:
 
-```tsx
-import { useMentionResolver } from '@type-ahead-mention/core';
-
-function PreviewComponent() {
-  const template = "Hello {{user.name}}! You have {{order.items.0.quantity}} items.";
-  
-  const data = {
-    user: { name: "Alice" },
-    order: {
-      items: [{ quantity: 5 }]
-    }
-  };
-
-  const resolved = useMentionResolver(template, data);
-  // Result: "Hello Alice! You have 5 items."
-
-  return <div>{resolved}</div>;
+```css
+.my-editor {
+  --tam-accent: #0a7cff;     /* focus ring, caret */
+  --tam-border: #d0d5dd;
+  --tam-bg: #fff;
+  --tam-text: #101828;
+  --tam-muted: #667085;
+  --tam-radius: 8px;
+  --tam-padding: 8px 12px;
+  --tam-var-bg: #e8f1ff;     /* variable chips */
+  --tam-var-text: #0a58ca;
+  --tam-invalid: #d92d20;    /* unknown variables */
+  --tam-popup-bg: #fff;
+  --tam-selected-bg: #e8f1ff;
 }
 ```
 
-### `useMentionSuggestions`
+## Template helpers
 
-Advanced hook for building custom mention input implementations.
+These are plain functions with no React, so you can use them on the server:
 
-```tsx
-import { useMentionSuggestions } from '@type-ahead-mention/core';
+```ts
+import { resolveTemplate, validateTemplate, parseTemplate, getValueAtPath } from 'type-ahead-mention';
 
-const { getInputProps, SuggestionPopper } = useMentionSuggestions(
-  initialValue,
-  suggestionsData
-);
+resolveTemplate('Hi {{ user.name }} ({{user.nick}})', data);
+// → "Hi Ada Lovelace ({{user.nick}})"   (unknown paths are kept by default)
 
-return (
-  <>
-    <input {...getInputProps()} />
-    {SuggestionPopper}
-  </>
-);
+resolveTemplate(template, data, {
+  missing: 'empty',                      // or 'keep', or (variable) => string
+  format: (value) => String(value),      // defaults: primitives → String, objects → JSON
+  delimiters: { open: '${', close: '}' },
+});
+
+validateTemplate('Hi {{user.nmae}}', data);
+// → { valid: false, unknown: [{ path: 'user.nmae', raw: '{{user.nmae}}', from: 3, to: 16 }] }
+
+parseTemplate('{{ a.b }} and {{c[0]}}'); // paths are normalized: 'a.b', 'c.0'
+getValueAtPath(data, 'order.items[0].qty'); // → { found: true, value: 2 }
 ```
 
-## 🎯 Usage Examples
+`useMentionResolver(template, data, options?)` is `resolveTemplate` wrapped in `useMemo`.
 
-### Nested Objects
+### Type-safe paths
 
-```tsx
-const suggestions = {
-  user: {
-    name: "John Doe",
-    address: {
-      street: "123 Main St",
-      city: "New York",
-      country: "USA"
-    }
-  }
-};
+```ts
+import type { TemplatePath } from 'type-ahead-mention';
 
-// Use in template: {{user.address.city}} → "New York"
+type Path = TemplatePath<typeof data>; // 'user' | 'user.name' | 'ticket.messages.0.text' | …
 ```
 
-### Arrays
+## Plain `<input>` / `<textarea>`: `useMentionSuggestions`
+
+Use this when you don't want CodeMirror. The list renders in a portal, follows the caret, and has combobox/listbox ARIA.
 
 ```tsx
-const suggestions = {
-  user: {
-    roles: ["admin", "editor", "viewer"]
-  },
-  order: {
-    items: [
-      { name: "Product A", quantity: 2 },
-      { name: "Product B", quantity: 1 }
-    ]
-  }
-};
+import { useMentionSuggestions } from 'type-ahead-mention';
 
-// Access arrays:
-// {{user.roles.0}} → "admin"
-// {{order.items.0.name}} → "Product A"
-// {{order.items.1.quantity}} → 1
-```
-
-### Email Template Builder
-
-```tsx
-function EmailTemplateEditor() {
-  const [template, setTemplate] = useState(
-    "Hi {{user.name}},\n\nYour order {{order.id}} has been shipped to:\n{{user.address.street}}\n{{user.address.city}}, {{user.address.zip}}"
-  );
-
-  const variables = {
-    user: {
-      name: "Jane Smith",
-      address: {
-        street: "456 Oak Ave",
-        city: "Boston",
-        zip: "02101"
-      }
-    },
-    order: {
-      id: "ORD-12345"
-    }
-  };
-
-  const preview = useMentionResolver(template, variables);
-
+function Field() {
+  const { getInputProps, SuggestionPopper } = useMentionSuggestions({
+    data,
+    defaultValue: 'Hello {{',
+    // or controlled: value, onChange
+  });
   return (
-    <div>
-      <MentionInput
-        value={template}
-        onChange={setTemplate}
-        suggestions={variables}
-        multiline
-        placeholder="Design your email template..."
-      />
-      <div className="preview">
-        <h3>Preview:</h3>
-        <pre>{preview}</pre>
-      </div>
-    </div>
+    <>
+      <textarea {...getInputProps<HTMLTextAreaElement>()} />
+      {SuggestionPopper}
+    </>
   );
 }
 ```
 
-### Notification System
+It also returns `value`, `setValue`, `suggestions`, `activeIndex`, `isOpen`, `select(item)` and `close()` if you'd rather render the list yourself.
 
-```tsx
-const notificationTemplates = {
-  orderShipped: "Your order {{order.id}} has shipped! Track: {{order.trackingUrl}}",
-  newMessage: "{{sender.name}} sent you a message: {{message.preview}}",
-  reminder: "Hey {{user.name}}, don't forget about {{event.title}} on {{event.date}}!"
-};
+## Already using CodeMirror?
 
-function NotificationBuilder() {
-  const [template, setTemplate] = useState(notificationTemplates.orderShipped);
+```ts
+import { templateVariables } from 'type-ahead-mention';
 
-  return (
-    <MentionInput
-      value={template}
-      onChange={setTemplate}
-      suggestions={notificationData}
-      placeholder="Create notification template..."
-    />
-  );
-}
+new EditorView({
+  extensions: [basicSetup, templateVariables({ data, delimiters: { open: '{{', close: '}}' } })],
+});
 ```
 
-## 🎨 Customization
+## Upgrading from v2
 
-### Styling with CSS-in-JS
+- `@uiw/react-codemirror`, `react-popper`, `@popperjs/core` and `get-caret-position` are no longer needed. You can uninstall them.
+- `codeMirrorProps` is replaced by `extensions` and the ref handle.
+- The `style` prop now styles the outer box without a double border. Theme with `--tam-*` variables.
+- `useMentionSuggestions(initialValue, data)` still works, but prefer `useMentionSuggestions({ data, defaultValue })`.
+- `useMentionResolver` now tolerates `{{ spaces }}` and JSON-stringifies objects instead of leaving the placeholder.
 
-```tsx
-<MentionInput
-  style={{
-    fontSize: '16px',
-    fontFamily: 'monospace',
-    padding: '12px',
-    border: '2px solid #e0e0e0',
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-    color: '#000000'
-  }}
-  // ... other props
-/>
-```
+See the [CHANGELOG](https://github.com/rahulpatwa1303/type-ahead-mention/blob/master/CHANGELOG.md) for everything else.
 
-### Dark Mode
+## Is this the right tool?
 
-```tsx
-const darkTheme = {
-  backgroundColor: '#1e1e1e',
-  color: '#e0e0e0',
-  border: '1px solid #404040',
-  borderRadius: '4px',
-  padding: '10px'
-};
+Use it when your users write **templates against structured data**: prompts, notifications, merge tags, webhook bodies. If you want `@name` mentions of people with avatars inside a rich-text editor, [react-mentions](https://github.com/signavio/react-mentions) or [Tiptap's Mention extension](https://tiptap.dev/docs/editor/extensions/nodes/mention) fit better.
 
-<MentionInput style={darkTheme} {...props} />
-```
-
-### Custom CSS Class
-
-```tsx
-// styles.css
-.custom-mention-input {
-  font-size: 18px;
-  line-height: 1.6;
-  border: 2px dashed #3b82f6;
-}
-
-// Component
-<MentionInput className="custom-mention-input" {...props} />
-```
-
-## 🔧 TypeScript
-
-The package is written in TypeScript and includes complete type definitions.
-
-```tsx
-import type { SuggestionNode } from '@type-ahead-mention/core';
-
-const suggestions: SuggestionNode = {
-  user: {
-    name: "John",
-    settings: {
-      theme: "dark"
-    }
-  }
-};
-```
-
-## 🌐 Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## 📝 License
+## License
 
 MIT © [Rahul Patwa](https://github.com/rahulpatwa1303)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 🐛 Issues
-
-Found a bug? Have a feature request? Please [open an issue](https://github.com/rahulpatwa1303/type-ahead-mention/issues).
-
-## 📚 More Examples
-
-Check out the [live demo](https://rahulpatwa1303.github.io/type-ahead-mention/) for interactive examples showcasing:
-- Real-time style customization
-- Theme switching (Light, Dark, Ocean, Sunset, Forest)
-- Editable JSON data structures
-- Interactive tree visualization
-- Template resolution
-
-## 🙏 Acknowledgments
-
-- Built with [CodeMirror](https://codemirror.net/)
-- Powered by [React](https://react.dev/)
-- Positioning by [Popper.js](https://popper.js.org/)
-
----
-
-Made with ❤️ by [Rahul Patwa](https://github.com/rahulpatwa1303)
