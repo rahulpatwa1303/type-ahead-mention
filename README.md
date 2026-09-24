@@ -1,106 +1,56 @@
-# Type-Ahead Mention
+# type-ahead-mention
 
-[![npm version](https://img.shields.io/npm/v/@type-ahead-mention/core.svg)](https://www.npmjs.com/package/@type-ahead-mention/core)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+**Autocomplete for `{{template.variables}}` in React.** Type `{{user.` and see the real value of every key in your data. Drill into nested objects and arrays, and get unknown variables underlined as you type. For prompt templates, email merge tags and workflow builders.
 
-A powerful, flexible React component for mention-based autocompletion powered by CodeMirror. Perfect for building chat apps, note-taking tools, template editors, and more with support for nested objects and arrays.
+[![npm](https://img.shields.io/npm/v/type-ahead-mention?color=d23a2b)](https://www.npmjs.com/package/type-ahead-mention)
+[![CI](https://github.com/rahulpatwa1303/type-ahead-mention/actions/workflows/ci.yml/badge.svg)](https://github.com/rahulpatwa1303/type-ahead-mention/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/type-ahead-mention?color=d23a2b)](./LICENSE)
 
-## 🔗 Links
+**[Live demo →](https://rahulpatwa1303.github.io/type-ahead-mention/)** · **[Documentation](./packages/core/README.md)** · **[npm](https://www.npmjs.com/package/type-ahead-mention)**
 
-- **[Live Demo](https://rahulpatwa1303.github.io/type-ahead-mention/)** - Try it out with interactive examples
-- **[NPM Package](https://www.npmjs.com/package/@type-ahead-mention/core)** - Install and use in your project
-- **[Documentation](./packages/core/README.md)** - Full API documentation
-
-## 🚀 Quick Start
+![Typing {{user. shows name, plan and locale with their values; picking one closes the variable](./.github/demo.gif)
 
 ```bash
-npm install @type-ahead-mention/core
+npm install type-ahead-mention
 ```
 
 ```tsx
-import { MentionInput } from '@type-ahead-mention/core';
-import { useState } from 'react';
+import { MentionInput, useMentionResolver } from 'type-ahead-mention';
 
-function App() {
-  const [message, setMessage] = useState("Hello {{user.name}}!");
+const data = { user: { name: 'Ada Lovelace', plan: 'Pro' } };
 
-  const suggestions = {
-    user: {
-      name: "John Doe",
-      email: "john@example.com"
-    }
-  };
-
-  return (
-    <MentionInput
-      value={message}
-      onChange={setMessage}
-      suggestions={suggestions}
-      placeholder="Type {{ to start..."
-    />
-  );
+function PromptEditor() {
+  const [template, setTemplate] = useState('Reply to {{user.name}}');
+  const preview = useMentionResolver(template, data); // "Reply to Ada Lovelace"
+  return <MentionInput value={template} onChange={setTemplate} suggestions={data} multiline />;
 }
 ```
 
-## ✨ Features
+See the [full documentation](./packages/core/README.md) for props, theming, the template helpers (`resolveTemplate`, `validateTemplate`), the plain-textarea hook and the CodeMirror extension.
 
-- 🚀 Powered by CodeMirror for robust text editing
-- 🎯 Smart nested object and array suggestions with dot notation
-- ⌨️ Full keyboard navigation support
-- 🎨 Highly customizable styling
-- 📝 Single-line input and multi-line textarea modes
-- 🔧 Template variable resolution hook
-- 📦 TypeScript ready with complete type definitions
-- 🎭 Zero configuration required
-
-## 📦 Project Structure
+## Repository layout
 
 ```
-type-ahead-mention/
-├── packages/
-│   └── core/              # NPM package
-│       ├── src/
-│       ├── dist/          # Built files
-│       ├── package.json
-│       └── README.md
-├── demo/                  # Interactive demo site
-│   ├── src/
-│   └── dist/              # Demo build
-└── README.md             # This file
+packages/core/   the npm package (source, tests, README)
+demo/            the landing page, deployed to GitHub Pages; imports the library from source
 ```
 
-## 🛠️ Development
+## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run demo locally
-npm run dev:demo
-
-# Build library
-npm run build:lib
-
-# Build demo
-npm run build:demo
+npm test            # library tests (Vitest)
+npm run typecheck
+npm run dev:demo    # landing page on localhost
+npm run build       # library, then landing page
 ```
 
-## 📝 Documentation
+The landing page deploys automatically on every push to `master`. To publish the package, bump `packages/core/package.json` and add a CHANGELOG entry, then run `npm run publish:lib`; `prepublishOnly` typechecks, tests and builds first.
 
-See the [full documentation](./packages/core/README.md) for:
-- Complete API reference
-- Advanced usage examples
-- Customization guide
-- TypeScript support
+## Contributing
 
-## 🤝 Contributing
+Issues and pull requests are welcome. Please add a test for any behaviour change (`packages/core/test`).
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
+## License
 
 MIT © [Rahul Patwa](https://github.com/rahulpatwa1303)
-
----
-
-Made with ❤️ by [Rahul Patwa](https://github.com/rahulpatwa1303)
