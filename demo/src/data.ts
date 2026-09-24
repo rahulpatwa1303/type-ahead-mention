@@ -203,3 +203,34 @@ export const samples: Record<TemplateKind, Sample> = {
 };
 
 export const kinds: TemplateKind[] = ['prompt', 'email', 'webhook'];
+
+// People for the @mention example. Synthetic roles; historical names.
+const initialsAvatar = (name: string, shade: string) => {
+  const initials = name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="${shade}"/><text x="20" y="25.5" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">${initials}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
+const shades = ['#16171a', '#4f5158', '#2b2c30', '#6b6d74'];
+
+export const people = [
+  ['u_01', 'Ada Lovelace', 'Billing'],
+  ['u_02', 'Alan Turing', 'Security'],
+  ['u_03', 'Charles Babbage', 'Infrastructure'],
+  ['u_04', 'Dorothy Vaughan', 'Support lead'],
+  ['u_05', 'Emmy Noether', 'Data'],
+  ['u_06', 'Grace Hopper', 'Engineering manager'],
+  ['u_07', 'Hedy Lamarr', 'Networking'],
+  ['u_08', 'John von Neumann', 'Architecture'],
+  ['u_09', 'Katherine Johnson', 'Analytics'],
+  ['u_10', 'Mary Jackson', 'Quality'],
+].map(([id, label, description], i) => ({
+  id,
+  label,
+  description,
+  avatar: initialsAvatar(label, shades[i % shades.length]),
+}));

@@ -479,6 +479,11 @@ body .tam-popup {
   --tam-selected-text: #fff;
   --tam-radius: 0px;
   --tam-padding: 10px 14px;
+  /* Mentions: passport-photo squares, typed names on a tint */
+  --tam-avatar-radius: 0px;
+  --tam-mention-radius: 0px;
+  --tam-mention-bg: var(--tint);
+  --tam-mention-text: var(--type);
   font-family: var(--typed);
   font-size: 16px;
 }
@@ -517,6 +522,15 @@ body .tam-popup-option {
 .sheet .cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail,
 body .tam-popup-option[aria-selected='true'] .tam-popup-detail {
   color: rgb(255 255 255 / 0.85);
+}
+.sheet .tam-avatar,
+.sheet .tam-option-avatar {
+  outline: 1px solid var(--ink);
+  outline-offset: 0;
+}
+.sheet .tam-mention {
+  font-family: var(--typed);
+  font-weight: 700;
 }
 .sheet .cm-tooltip.cm-completionInfo {
   border-radius: 0;

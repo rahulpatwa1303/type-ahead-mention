@@ -1,6 +1,6 @@
 # type-ahead-mention
 
-**Autocomplete for `{{template.variables}}` in React.** Type `{{user.` and see the real value of every key in your data. Drill into nested objects and arrays, and get unknown variables underlined as you type. Built for prompt templates, email merge tags and workflow builders.
+**Autocomplete for `{{template.variables}}` in React.** Type `{{user.` and see the real value of every key in your data. Drill into nested objects and arrays, get unknown variables underlined as you type, and `@mention` people with async search and avatars. Built for prompt templates, email merge tags and workflow builders.
 
 [![npm](https://img.shields.io/npm/v/type-ahead-mention?color=d23a2b)](https://www.npmjs.com/package/type-ahead-mention)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/type-ahead-mention?color=d23a2b)](https://bundlephobia.com/package/type-ahead-mention)
@@ -48,6 +48,7 @@ export function PromptEditor() {
 - **Flags typos.** Variables whose path isn't in the data get a wavy underline, and `validateTemplate()` gives you the same list on the server.
 - **Your syntax.** `delimiters={{ open: '${', close: '}' }}`, `[[ ]]`, or `@` with no closing delimiter.
 - **Input or textarea.** Single-line by default: Enter never adds a line, pasted newlines become spaces, and `onSubmit` fires on Enter. Pass `multiline` for textarea behaviour (Mod-Enter submits).
+- **@mentions.** Async search with avatars; picks are stored as `@[Ada Lovelace](u_42)` and shown as chips that delete as one unit.
 - **Keyboard first.** ↑/↓ to move, Enter or Tab to accept, Esc to close.
 - **Themeable.** Light, dark or `auto`, and every color, radius and padding is a `--tam-*` CSS variable.
 - **No editor option.** `useMentionSuggestions()` adds the same completion to your own `<input>` or `<textarea>`.
@@ -64,6 +65,7 @@ export function PromptEditor() {
 | `showValues` | `boolean` | `true` | Value preview next to each suggestion |
 | `highlight` | `boolean` | `true` | Show variables as chips |
 | `validate` | `boolean` | `true` | Underline paths that aren't in `suggestions` |
+| `mentions` | `MentionSource \| MentionSource[]` | | `@mentions`: see below |
 | `colorScheme` | `'light' \| 'dark' \| 'auto'` | `'light'` | Built-in themes |
 | `placeholder` | `string` | | |
 | `onSubmit` | `(value: string) => void` | | Enter (single-line) or Mod-Enter (multiline) |
@@ -72,6 +74,38 @@ export function PromptEditor() {
 | `id`, `aria-label`, `aria-describedby` | `string` | | Applied to the editable element |
 | `style` / `className` | | | Applied to the outer box |
 | `extensions` | `Extension[]` | | Extra CodeMirror extensions |
+
+### @mentions
+
+```tsx
+import { MentionInput, replaceMentions, type MentionSource } from 'type-ahead-mention';
+
+// Keep the source stable (module scope or useMemo) so results stay cached
+const people: MentionSource = {
+  trigger: '@', // default
+  search: async (query, { signal }) => {
+    const res = await fetch(`/api/users?q=${encodeURIComponent(query)}`, { signal });
+    return res.json(); // [{ id, label, avatar?, description? }]
+  },
+  debounce: 150, // default, ms
+  getItem: (id) => userCache.get(id), // optional: avatars for chips in saved text
+};
+
+<MentionInput value={text} onChange={setText} suggestions={data} mentions={people} />;
+```
+
+- While a search is pending the list shows **Searching…**; an empty result shows **No matches**. Results are cached per query, and the previous request is aborted through `signal`.
+- A pick is stored as `@[Ada Lovelace](u_42)` (the same format react-mentions uses) and shown as a chip. The cursor skips over it and Backspace removes it whole.
+- Pass several sources for several triggers, e.g. `[{ trigger: '@', search: users }, { trigger: '#', search: channels }]`.
+- The trigger only fires at the start of a line or after a space or `(`, so email addresses don't open the list.
+
+```ts
+parseMentions('Ask @[Ada](u_42)');                 // [{ trigger: '@', label: 'Ada', id: 'u_42', from: 4, to: 16, raw }]
+replaceMentions('Ask @[Ada](u_42)');               // 'Ask @Ada'
+replaceMentions('Ask @[Ada](u_42)', (m) => `<@${m.id}>`); // 'Ask <@u_42>'
+```
+
+Mentions are available in `<MentionInput>` (not yet in the plain-textarea hook).
 
 ### Ref handle
 
@@ -184,7 +218,7 @@ See the [CHANGELOG](https://github.com/rahulpatwa1303/type-ahead-mention/blob/ma
 
 ## Is this the right tool?
 
-Use it when your users write **templates against structured data**: prompts, notifications, merge tags, webhook bodies. If you want `@name` mentions of people with avatars inside a rich-text editor, [react-mentions](https://github.com/signavio/react-mentions) or [Tiptap's Mention extension](https://tiptap.dev/docs/editor/extensions/nodes/mention) fit better.
+Use it when your users write **plain-text templates against structured data**, optionally mentioning people: prompts, notifications, merge tags, webhook bodies, chat messages. If you need **rich text** (bold, lists, embeds), use [Tiptap](https://tiptap.dev/docs/editor/extensions/nodes/mention) or Lexical instead; this library is plain text by design.
 
 ## License
 

@@ -11,7 +11,7 @@ import { Annotation, Compartment, EditorState, Prec, type Extension } from '@cod
 import { EditorView, keymap, placeholder as placeholderExt } from '@codemirror/view';
 import { history, historyKeymap, defaultKeymap } from '@codemirror/commands';
 import { acceptCompletion, completionStatus, startCompletion } from '@codemirror/autocomplete';
-import { singleLine, templateVariables } from './codemirror';
+import { singleLine, templateVariables, type MentionSource } from './codemirror';
 import { injectStyles } from './styles';
 import { DEFAULT_DELIMITERS, type Delimiters, type SuggestionNode } from './template';
 
@@ -48,6 +48,12 @@ export interface MentionInputProps {
    * @default true
    */
   validate?: boolean;
+  /**
+   * Suggest people (or anything else) after `@`. Picked items are stored as
+   * `@[Label](id)` and shown as chips.
+   * @example mentions={{ trigger: '@', search: (q) => api.users(q) }}
+   */
+  mentions?: MentionSource | MentionSource[];
   /**
    * `'auto'` follows the OS setting.
    * @default 'light'
@@ -96,6 +102,7 @@ export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(
       showValues = true,
       highlight = true,
       validate = true,
+      mentions,
       colorScheme = 'light',
       disabled = false,
       readOnly = false,
@@ -127,8 +134,16 @@ export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(
     const callbacks = useRef({ onChange, onSubmit, onFocus, onBlur });
     callbacks.current = { onChange, onSubmit, onFocus, onBlur };
 
+    const mentionSources = !mentions ? [] : Array.isArray(mentions) ? mentions : [mentions];
     const configExt = () =>
-      templateVariables({ data: suggestions, delimiters, showValues, highlight, validate });
+      templateVariables({
+        data: suggestions,
+        delimiters,
+        showValues,
+        highlight,
+        validate,
+        mentions: mentionSources,
+      });
 
     const submit = (view: EditorView) => {
       if (!callbacks.current.onSubmit) return false;
@@ -213,7 +228,7 @@ export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(
       if (first.current) return;
       reconfigure(compartments.config, configExt());
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [suggestions, delimiters.open, delimiters.close, showValues, highlight, validate]);
+    }, [suggestions, delimiters.open, delimiters.close, showValues, highlight, validate, mentions]);
 
     useEffect(() => {
       if (first.current) return;

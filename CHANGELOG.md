@@ -5,6 +5,7 @@
 A rewrite focused on template variables. There are breaking changes; see "Upgrading from v2" in the README.
 
 ### Added
+- `@mentions`: the `mentions` prop takes one or more `{ trigger, search, debounce, getItem }` sources. Search can be sync or async (debounced, cached, aborted through `signal`), and the list shows avatars plus "Searching…" and "No matches" rows. Picks are stored as `@[Label](id)` and shown as atomic chips. There are helpers too: `parseMentions`, `replaceMentions`, `formatMention`, `getMentionMatch`.
 - Value previews in the suggestion list (`"Ada Lovelace"`, `{3 keys}`, `[2 items]`) plus a full-JSON info panel.
 - Variables shown as chips in the text, and unknown paths underlined (`highlight`, `validate` props).
 - Selecting a leaf closes the variable with `}}`; selecting an object or array adds `.` and opens the next level.

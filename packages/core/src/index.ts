@@ -17,6 +17,10 @@ export {
   filterSuggestions,
   previewValue,
   normalizePath,
+  formatMention,
+  parseMentions,
+  replaceMentions,
+  getMentionMatch,
 } from './template';
 export type {
   SuggestionNode,
@@ -26,15 +30,19 @@ export type {
   ResolveOptions,
   SuggestionItem,
   CompletionMatch,
+  MentionItem,
+  ParsedMention,
+  MentionMatch,
 } from './template';
 
 export {
   templateVariables,
   templateCompletionSource,
+  mentionCompletionSource,
   templateHighlighter,
   templateConfig,
   singleLine,
 } from './codemirror';
-export type { TemplateConfig } from './codemirror';
+export type { TemplateConfig, MentionSource } from './codemirror';
 
 export { injectStyles } from './styles';

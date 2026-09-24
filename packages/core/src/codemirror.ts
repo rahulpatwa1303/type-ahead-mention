@@ -8,24 +8,44 @@ import {
   type CompletionContext,
   type CompletionResult,
 } from '@codemirror/autocomplete';
-import { EditorState, Facet, RangeSetBuilder, type Extension } from '@codemirror/state';
+import { EditorState, Facet, RangeSet, RangeSetBuilder, type Extension } from '@codemirror/state';
 import {
   Decoration,
   EditorView,
   ViewPlugin,
+  WidgetType,
   type DecorationSet,
   type ViewUpdate,
 } from '@codemirror/view';
 import {
   DEFAULT_DELIMITERS,
+  formatMention,
   getCompletionMatch,
+  getMentionMatch,
   getValueAtPath,
+  parseMentions,
   parseTemplate,
   previewValue,
   type Delimiters,
+  type MentionItem,
   type SuggestionItem,
   type SuggestionNode,
 } from './template';
+
+/** Where @mention suggestions come from. Keep the object stable (module scope or useMemo) so results stay cached. */
+export interface MentionSource {
+  /** @default '@' */
+  trigger?: string;
+  /** Return matching items for the typed query. May be async; `signal` aborts when the query changes. */
+  search: (query: string, options: { signal: AbortSignal }) => MentionItem[] | Promise<MentionItem[]>;
+  /**
+   * Milliseconds to wait after the last keystroke before searching.
+   * @default 150
+   */
+  debounce?: number;
+  /** Look up an item by id, so chips in saved text can show avatars */
+  getItem?: (id: string) => MentionItem | undefined;
+}
 
 export interface TemplateConfig {
   data: SuggestionNode;
@@ -36,6 +56,8 @@ export interface TemplateConfig {
   highlight: boolean;
   /** Mark variables whose path isn't in `data` */
   validate: boolean;
+  /** @mention sources */
+  mentions: MentionSource[];
 }
 
 const defaultConfig: TemplateConfig = {
@@ -44,6 +66,7 @@ const defaultConfig: TemplateConfig = {
   showValues: true,
   highlight: true,
   validate: true,
+  mentions: [],
 };
 
 /** Holds the data and options the completion source and highlighter read. */
@@ -111,43 +134,217 @@ export const templateCompletionSource = (context: CompletionContext): Completion
   };
 };
 
+// --- @mentions ---------------------------------------------------------------
+
+interface SourceCache {
+  results: Map<string, MentionItem[]>;
+  items: Map<string, MentionItem>;
+  pending: string | null;
+  controller: AbortController | null;
+}
+
+const caches = new WeakMap<MentionSource, SourceCache>();
+const cacheFor = (source: MentionSource): SourceCache => {
+  let cache = caches.get(source);
+  if (!cache) {
+    cache = { results: new Map(), items: new Map(), pending: null, controller: null };
+    caches.set(source, cache);
+  }
+  return cache;
+};
+
+const lookupItem = (sources: MentionSource[], id: string): MentionItem | undefined => {
+  for (const source of sources) {
+    const item = cacheFor(source).items.get(id) ?? source.getItem?.(id);
+    if (item) return item;
+  }
+  return undefined;
+};
+
+const statusResult = (from: number, label: string): CompletionResult => ({
+  from,
+  filter: false,
+  options: [{ label, type: 'tam-status', apply: () => {} }],
+});
+
+/** Completion source for `@` mentions. Searches asynchronously and caches per query. */
+export const mentionCompletionSource = (context: CompletionContext): CompletionResult | null => {
+  const { mentions } = context.state.facet(templateConfig);
+  if (mentions.length === 0) return null;
+  const line = context.state.doc.lineAt(context.pos);
+
+  for (const source of mentions) {
+    const trigger = source.trigger ?? '@';
+    const match = getMentionMatch(line.text, context.pos - line.from, trigger);
+    if (!match) continue;
+    const from = line.from + match.from;
+    const to = line.from + match.to;
+    const cache = cacheFor(source);
+    const cached = cache.results.get(match.query);
+
+    if (!cached) {
+      if (cache.pending !== match.query) {
+        cache.pending = match.query;
+        cache.controller?.abort();
+        const controller = new AbortController();
+        cache.controller = controller;
+        const query = match.query;
+        const view = context.view;
+        setTimeout(async () => {
+          if (controller.signal.aborted) return;
+          try {
+            const items = await source.search(query, { signal: controller.signal });
+            if (controller.signal.aborted) return;
+            cache.results.set(query, items);
+            for (const item of items) cache.items.set(item.id, item);
+            if (cache.results.size > 100) cache.results.delete(cache.results.keys().next().value!);
+          } catch {
+            if (controller.signal.aborted) return;
+            cache.results.set(query, []);
+          }
+          if (cache.pending === query) cache.pending = null;
+          // Ask CodeMirror for the list again; this time it's cached
+          if (view && view.hasFocus) startCompletion(view);
+        }, source.debounce ?? 150);
+      }
+      return statusResult(from, 'Searching…');
+    }
+
+    if (cached.length === 0) return statusResult(from, 'No matches');
+
+    return {
+      from,
+      to: Math.max(to, context.pos),
+      filter: false,
+      options: cached.map((item, index) => ({
+        label: item.label,
+        detail: item.description,
+        type: 'tam-person',
+        boost: -index / cached.length,
+        avatar: item.avatar,
+        apply: (view: EditorView, _c: Completion, applyFrom: number, applyTo: number) => {
+          const insert = formatMention(item, trigger) + ' ';
+          view.dispatch({
+            changes: { from: applyFrom, to: applyTo, insert },
+            selection: { anchor: applyFrom + insert.length },
+            userEvent: 'input.complete',
+          });
+        },
+      })),
+    };
+  }
+  return null;
+};
+
+class MentionWidget extends WidgetType {
+  constructor(
+    readonly raw: string,
+    readonly text: string,
+    readonly avatar: string | undefined
+  ) {
+    super();
+  }
+  eq(other: MentionWidget) {
+    return other.raw === this.raw && other.avatar === this.avatar;
+  }
+  toDOM() {
+    const chip = document.createElement('span');
+    chip.className = 'tam-mention';
+    chip.setAttribute('data-mention', this.raw);
+    if (this.avatar) {
+      const img = document.createElement('img');
+      img.className = 'tam-avatar';
+      img.src = this.avatar;
+      img.alt = '';
+      chip.appendChild(img);
+    }
+    chip.appendChild(document.createTextNode(this.text));
+    return chip;
+  }
+  ignoreEvent() {
+    return false;
+  }
+}
+
+const renderAvatar = (completion: Completion & { avatar?: string }) => {
+  if (completion.type !== 'tam-person') return null;
+  const box = document.createElement('span');
+  box.className = 'tam-option-avatar';
+  if (completion.avatar) {
+    const img = document.createElement('img');
+    img.src = completion.avatar;
+    img.alt = '';
+    box.appendChild(img);
+  } else {
+    box.textContent = completion.label.slice(0, 1).toUpperCase();
+  }
+  return box;
+};
+
+// --- highlighting ----------------------------------------------------------------
+
 const varMark = Decoration.mark({ class: 'tam-var' });
 
-function buildDecorations(view: EditorView): DecorationSet {
-  const { data, delimiters, highlight, validate } = view.state.facet(templateConfig);
+function buildDecorations(view: EditorView): { decorations: DecorationSet; atoms: DecorationSet } {
+  const { data, delimiters, highlight, validate, mentions } = view.state.facet(templateConfig);
   const builder = new RangeSetBuilder<Decoration>();
-  if (!highlight) return builder.finish();
+  const atoms = new RangeSetBuilder<Decoration>();
   const hasData = Object.keys(data).length > 0;
+  const triggers = mentions.map((m) => m.trigger ?? '@');
 
   for (const { from, to } of view.visibleRanges) {
     const startLine = view.state.doc.lineAt(from);
     const endLine = view.state.doc.lineAt(to);
     for (let n = startLine.number; n <= endLine.number; n++) {
       const line = view.state.doc.line(n);
-      for (const variable of parseTemplate(line.text, delimiters)) {
-        const invalid = validate && hasData && !getValueAtPath(data, variable.path).found;
-        builder.add(
-          line.from + variable.from,
-          line.from + variable.to,
-          invalid
-            ? Decoration.mark({
-                class: 'tam-var tam-var-invalid',
-                attributes: { title: `Unknown variable: ${variable.path}` },
-              })
-            : varMark
-        );
+      const ranges: { from: number; to: number; deco: Decoration; atomic: boolean }[] = [];
+
+      if (highlight) {
+        for (const variable of parseTemplate(line.text, delimiters)) {
+          const invalid = validate && hasData && !getValueAtPath(data, variable.path).found;
+          ranges.push({
+            from: variable.from,
+            to: variable.to,
+            atomic: false,
+            deco: invalid
+              ? Decoration.mark({
+                  class: 'tam-var tam-var-invalid',
+                  attributes: { title: `Unknown variable: ${variable.path}` },
+                })
+              : varMark,
+          });
+        }
+      }
+      for (const m of parseMentions(line.text, triggers)) {
+        const item = lookupItem(mentions, m.id);
+        ranges.push({
+          from: m.from,
+          to: m.to,
+          atomic: true,
+          deco: Decoration.replace({ widget: new MentionWidget(m.raw, m.trigger + m.label, item?.avatar) }),
+        });
+      }
+
+      ranges.sort((a, b) => a.from - b.from);
+      let last = -1;
+      for (const r of ranges) {
+        if (r.from < last) continue; // overlapping; keep the first
+        builder.add(line.from + r.from, line.from + r.to, r.deco);
+        if (r.atomic) atoms.add(line.from + r.from, line.from + r.to, r.deco);
+        last = r.to;
       }
     }
   }
-  return builder.finish();
+  return { decorations: builder.finish(), atoms: atoms.finish() };
 }
 
 /** Marks variables as chips, and unknown ones with a wavy underline. */
 export const templateHighlighter = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
+    atoms: DecorationSet;
     constructor(view: EditorView) {
-      this.decorations = buildDecorations(view);
+      ({ decorations: this.decorations, atoms: this.atoms } = buildDecorations(view));
     }
     update(update: ViewUpdate) {
       if (
@@ -155,7 +352,7 @@ export const templateHighlighter = ViewPlugin.fromClass(
         update.viewportChanged ||
         update.state.facet(templateConfig) !== update.startState.facet(templateConfig)
       ) {
-        this.decorations = buildDecorations(update.view);
+        ({ decorations: this.decorations, atoms: this.atoms } = buildDecorations(update.view));
       }
     }
   },
@@ -191,11 +388,15 @@ export const singleLine = (): Extension =>
 export const templateVariables = (config: Partial<TemplateConfig> = {}): Extension => [
   templateConfig.of(config),
   autocompletion({
-    override: [templateCompletionSource],
+    override: [templateCompletionSource, mentionCompletionSource],
     icons: false,
     activateOnTyping: true,
     closeOnBlur: true,
-    optionClass: () => 'tam-option',
+    optionClass: (c) =>
+      c.type === 'tam-status' ? 'tam-option tam-status' : c.type === 'tam-person' ? 'tam-option tam-person' : 'tam-option',
+    addToOptions: [{ render: renderAvatar, position: 20 }],
   }),
   templateHighlighter,
+  // Mention chips behave as one character: the cursor skips them, Backspace removes them whole
+  EditorView.atomicRanges.of((view) => view.plugin(templateHighlighter)?.atoms ?? RangeSet.empty),
 ];

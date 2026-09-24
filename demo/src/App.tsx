@@ -3,12 +3,14 @@ import { Check, Copy, Minus, Package, X } from 'lucide-react';
 import { Github } from './GithubIcon';
 import {
   MentionInput,
+  replaceMentions,
   resolveTemplate,
   useMentionSuggestions,
   validateTemplate,
+  type MentionSource,
 } from 'type-ahead-mention';
 import { Hero } from './Hero';
-import { samples } from './data';
+import { people, samples } from './data';
 
 const INSTALL = 'npm install type-ahead-mention';
 const COPY_NAMES = ['Original', 'Duplicate', 'Triplicate'];
@@ -107,6 +109,48 @@ function SubmitSpecimen({ carbon }: { carbon: boolean }) {
   );
 }
 
+// A fake directory API: filters the list after a network-like delay
+const peopleSource: MentionSource = {
+  trigger: '@',
+  search: async (query, { signal }) => {
+    await new Promise((resolve, reject) => {
+      const t = window.setTimeout(resolve, 380);
+      signal.addEventListener('abort', () => {
+        window.clearTimeout(t);
+        reject(new DOMException('aborted', 'AbortError'));
+      });
+    });
+    const q = query.toLowerCase();
+    return people
+      .filter((p) => p.label.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
+      .slice(0, 6);
+  },
+  getItem: (id) => people.find((p) => p.id === id),
+};
+
+function MentionSpecimen({ carbon }: { carbon: boolean }) {
+  const [value, setValue] = useState('Loop in @[Grace Hopper](u_06) and @');
+  return (
+    <>
+      <MentionInput
+        value={value}
+        onChange={setValue}
+        suggestions={specimenData}
+        mentions={peopleSource}
+        multiline
+        colorScheme={carbon ? 'dark' : 'light'}
+        aria-label="Mentions example"
+      />
+      <p className="specimen-out">
+        <span className="out-label">Stored:</span> {value}
+      </p>
+      <p className="specimen-out">
+        <span className="out-label">replaceMentions():</span> {replaceMentions(value)}
+      </p>
+    </>
+  );
+}
+
 function ValidateSpecimen({ carbon }: { carbon: boolean }) {
   const [value, setValue] = useState('Hi {{user.nmae}}, you have {{user.seats}} seats on {{user.plan}}.');
   const { unknown } = validateTemplate(value, specimenData);
@@ -184,6 +228,7 @@ const props: [string, string, string, string][] = [
   ['showValues', 'boolean', 'true', 'Preview each value in the list'],
   ['highlight', 'boolean', 'true', 'Show variables as chips'],
   ['validate', 'boolean', 'true', "Underline paths that aren't in the data"],
+  ['mentions', '{ trigger, search, getItem }', '—', '@mentions with async search and avatars, stored as @[Label](id)'],
   ['onSubmit', '(value) => void', '—', 'Enter (single-line) or Mod-Enter (multiline)'],
   ['colorScheme', "'light' | 'dark' | 'auto'", "'light'", 'Built-in themes; restyle with --tam-* CSS variables'],
   ['disabled / readOnly', 'boolean', 'false', ''],
@@ -198,7 +243,7 @@ const compare: [string, Mark, Mark, Mark][] = [
   ['Flags variables missing from the data', 'yes', 'no', 'partial'],
   ['Resolves and validates templates at runtime', 'yes', 'no', 'no'],
   ['Adds completion to your own <input> / <textarea>', 'yes', 'no', 'no'],
-  ['@mentions of people, with avatars and async search', 'partial', 'yes', 'yes'],
+  ['@mentions of people, with avatars and async search', 'yes', 'yes', 'yes'],
   ['Rich text (bold, lists, embeds)', 'no', 'no', 'yes'],
 ];
 
@@ -249,8 +294,8 @@ export default function App() {
             </h1>
             <p className="offer">
               Type <code>{'{{user.'}</code> and see the real value of every key in your data. Drill into nested
-              objects and arrays. Misspelled variables get underlined as you type. For prompt templates, email
-              merge tags and workflow builders.
+              objects and arrays. Misspelled variables get underlined as you type, and <code>@</code> mentions
+              people. For prompt templates, email merge tags and workflow builders.
             </p>
             <div className="stub" role="group" aria-label="Install">
               <span className="stub-label caption">Install</span>
@@ -317,6 +362,19 @@ export default function App() {
               </div>
               <div className="specimen-field">
                 <ValidateSpecimen carbon={carbon} />
+              </div>
+            </div>
+            <div className="specimen">
+              <div className="specimen-note">
+                <h3>Mentions people, too</h3>
+                <p>
+                  <code>{'mentions={{ search }}'}</code> takes a sync or async search, with avatars. Picks are
+                  stored as <code>{'@[Grace Hopper](u_06)'}</code> and shown as chips that Backspace removes
+                  whole. Type after the <code>@</code>: this one searches a fake directory with a 380 ms delay.
+                </p>
+              </div>
+              <div className="specimen-field">
+                <MentionSpecimen carbon={carbon} />
               </div>
             </div>
             <div className="specimen">
@@ -425,7 +483,8 @@ export default function App() {
               </table>
               <p className="api-more">
                 Also exported: <code>resolveTemplate</code>, <code>validateTemplate</code>,{' '}
-                <code>parseTemplate</code>, <code>getValueAtPath</code>, the <code>TemplatePath&lt;T&gt;</code>{' '}
+                <code>parseTemplate</code>, <code>getValueAtPath</code>, <code>parseMentions</code>,{' '}
+                <code>replaceMentions</code>, the <code>TemplatePath&lt;T&gt;</code>{' '}
                 type, and <code>templateVariables()</code> for an existing CodeMirror editor.{' '}
                 <a href={`${REPO}/tree/master/packages/core#readme`}>Full API reference</a>
               </p>
@@ -505,9 +564,9 @@ export default function App() {
             </a>
           </div>
           <ul className="band-facts">
-            <li>8.6 kB gzipped, plus CodeMirror</li>
+            <li>10.7 kB gzipped, plus CodeMirror</li>
             <li>TypeScript types, ESM and CJS</li>
-            <li>46 tests</li>
+            <li>53 tests</li>
             <li>MIT license</li>
           </ul>
         </div>

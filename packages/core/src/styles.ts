@@ -147,6 +147,52 @@ export const css = `
 }
 .tam-info-path { font-size: 11px; color: var(--tam-muted); margin-bottom: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .tam-info-value { margin: 0; font-size: 12px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.tam-mention {
+  display: inline;
+  padding: 1px 6px 1px 2px;
+  margin: 0 1px;
+  border-radius: var(--tam-mention-radius, 999px);
+  background: var(--tam-mention-bg, var(--tam-var-bg));
+  color: var(--tam-mention-text, var(--tam-var-text));
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tam-mention:not(:has(img)) { padding-left: 6px; }
+.tam-avatar {
+  display: inline-block;
+  vertical-align: -0.2em;
+  margin-right: 4px;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: var(--tam-avatar-radius, 50%);
+  object-fit: cover;
+  flex: none;
+}
+.tam-option-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--tam-avatar-radius, 50%);
+  background: var(--tam-var-bg);
+  color: var(--tam-var-text);
+  font-size: 11px;
+  font-weight: 700;
+  align-self: center;
+}
+.tam-option-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.tam-root .cm-tooltip-autocomplete > ul > li.tam-person { align-items: center; }
+.tam-root .cm-tooltip-autocomplete > ul > li.tam-status {
+  color: var(--tam-muted);
+  font-style: italic;
+  cursor: default;
+}
+.tam-root .cm-tooltip-autocomplete > ul > li.tam-status[aria-selected] {
+  background: transparent;
+  color: var(--tam-muted);
+}
 .tam-popup { position: fixed; z-index: 1000; min-width: 200px; max-height: 16em; overflow-y: auto; margin: 0; list-style: none; }
 .tam-popup-label { flex: 1; }
 `;

@@ -310,6 +310,9 @@ Typewriter cadence in the autoplaying hero, and the hold-red flash: a changed me
 - **Do** restrict the soft lift shadow to surfaces the visitor operates (live form, install stub, popup).
 - **Do** render dark mode as Carbon: carbon sheet, lightened ink, bone type, and a deeper band red.
 
+### Mentions
+- Mention chips are typed names (Courier Prime 700) on `--tint`, with 0px corners. Avatars are square "passport photo" boxes with a 1px ink outline (`--tam-avatar-radius: 0`), never circles.
+
 ### Don't:
 - **Don't** introduce a second chromatic color, gradients, or colored section backgrounds; the band is the only flood.
 - **Don't** set headings, buttons or captions in Courier, or data and code in Archivo.

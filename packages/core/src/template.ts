@@ -249,3 +249,103 @@ export const filterSuggestions = (items: SuggestionItem[], query: string): Sugge
   }
   return [...prefix, ...contains];
 };
+
+// ---------------------------------------------------------------------------
+// @mentions: stored as `@[Label](id)`, the same format react-mentions uses
+
+/** A person (or anything else) that can be mentioned. */
+export interface MentionItem {
+  /** Stable id, stored in the text */
+  id: string;
+  /** Display name, stored in the text and shown in the chip */
+  label: string;
+  /** Image URL for the avatar */
+  avatar?: string;
+  /** Secondary line in the list, e.g. an email or role */
+  description?: string;
+}
+
+/** A mention found in text. */
+export interface ParsedMention {
+  trigger: string;
+  label: string;
+  id: string;
+  /** The stored text, e.g. `@[Ada Lovelace](u_42)` */
+  raw: string;
+  from: number;
+  to: number;
+}
+
+/** The stored text for a mention: `@[Ada Lovelace](u_42)`. */
+export const formatMention = (item: Pick<MentionItem, 'id' | 'label'>, trigger = '@'): string =>
+  `${trigger}[${item.label.replace(/[[\]\n]/g, '')}](${item.id.replace(/[()\s]/g, '')})`;
+
+const mentionRegExp = (triggers: string[]) =>
+  new RegExp(`(${triggers.map(escapeRegExp).join('|')})\\[([^\\]\\n]+)\\]\\(([^)\\s]+)\\)`, 'g');
+
+/** Finds every stored mention. */
+export const parseMentions = (text: string, triggers: string[] = ['@']): ParsedMention[] => {
+  if (!text || triggers.length === 0) return [];
+  return [...text.matchAll(mentionRegExp(triggers))].map((m) => ({
+    trigger: m[1],
+    label: m[2],
+    id: m[3],
+    raw: m[0],
+    from: m.index!,
+    to: m.index! + m[0].length,
+  }));
+};
+
+/**
+ * Replaces stored mentions, e.g. to send plain text to an LLM or render HTML.
+ * Defaults to `@Label`.
+ * @example replaceMentions('Ask @[Ada](u_42)', (m) => `<@${m.id}>`) // 'Ask <@u_42>'
+ */
+export const replaceMentions = (
+  text: string,
+  replacer: (mention: ParsedMention) => string = (m) => m.trigger + m.label,
+  triggers: string[] = ['@']
+): string => {
+  let out = '';
+  let last = 0;
+  for (const m of parseMentions(text, triggers)) {
+    out += text.slice(last, m.from) + replacer(m);
+    last = m.to;
+  }
+  return out + text.slice(last);
+};
+
+/** The partly typed mention at the cursor, with offsets relative to `text`. */
+export interface MentionMatch {
+  trigger: string;
+  /** Offset of the trigger character */
+  from: number;
+  /** End of the query (includes word characters after the cursor) */
+  to: number;
+  query: string;
+}
+
+const QUERY_RE = /^[\p{L}\p{N}_.'-]*$/u;
+const WORD_AFTER_RE = /^[\p{L}\p{N}_.'-]*/u;
+
+/**
+ * Finds a mention being typed at `cursor`, e.g. `Ask @ad|`.
+ * The trigger must start the line or follow whitespace or `(`, so emails don't count.
+ */
+export const getMentionMatch = (
+  text: string,
+  cursor: number,
+  trigger = '@',
+  maxQuery = 40
+): MentionMatch | null => {
+  const lineStart = text.lastIndexOf('\n', cursor - 1) + 1;
+  const before = text.slice(lineStart, cursor);
+  const at = before.lastIndexOf(trigger);
+  if (at === -1) return null;
+  const prev = before[at - 1];
+  if (at > 0 && !/[\s(]/.test(prev)) return null;
+  const query = before.slice(at + trigger.length);
+  if (query.length > maxQuery || !QUERY_RE.test(query)) return null;
+  const after = WORD_AFTER_RE.exec(text.slice(cursor))![0].length;
+  return { trigger, from: lineStart + at, to: cursor + after, query };
+};

@@ -1,6 +1,6 @@
 # type-ahead-mention
 
-**Autocomplete for `{{template.variables}}` in React.** Type `{{user.` and see the real value of every key in your data. Drill into nested objects and arrays, and get unknown variables underlined as you type. For prompt templates, email merge tags and workflow builders.
+**Autocomplete for `{{template.variables}}` in React.** Type `{{user.` and see the real value of every key in your data. Drill into nested objects and arrays, get unknown variables underlined as you type, and `@mention` people with async search and avatars. For prompt templates, email merge tags and workflow builders.
 
 [![npm](https://img.shields.io/npm/v/type-ahead-mention?color=d23a2b)](https://www.npmjs.com/package/type-ahead-mention)
 [![CI](https://github.com/rahulpatwa1303/type-ahead-mention/actions/workflows/ci.yml/badge.svg)](https://github.com/rahulpatwa1303/type-ahead-mention/actions/workflows/ci.yml)
